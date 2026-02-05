@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twenty-Five First | 404 Not Found</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Space Grotesk for that Gen Z/Modern Tech feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --text-color: #f0f0f0;
+            --accent-color: #333;
+            --glitch-color: #4a4a4a;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Space Grotesk', sans-serif;
+            overflow-x: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+        }
+
+        /* --- Canvas Background --- */
+        #threadCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.4;
+            pointer-events: none; /* Let clicks pass through */
+        }
+
+        /* --- Layout & Typography --- */
+        .content-wrapper {
+            position: relative;
+            z-index: 10;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .brand-logo {
+            font-weight: 700;
+            letter-spacing: -1px;
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            z-index: 20;
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        .error-code {
+            font-size: 8rem;
+            font-weight: 700;
+            line-height: 0.9;
+            position: relative;
+            letter-spacing: -5px;
+        }
+
+        .error-text {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            color: #888;
+        }
+
+        .btn-custom {
+            border: 1px solid var(--text-color);
+            color: var(--text-color);
+            background: transparent;
+            padding: 15px 40px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            border-radius: 0; /* Brutalist sharp edges */
+        }
+
+        .btn-custom:hover {
+            background: var(--text-color);
+            color: var(--bg-color);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- Glitch Effect for 404 --- */
+        .glitch-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .glitch {
+            position: relative;
+        }
+
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch::before {
+            left: 2px;
+            text-shadow: -1px 0 var(--glitch-color);
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim 5s infinite linear alternate-reverse;
+        }
+
+        .glitch::after {
+            left: -2px;
+            text-shadow: -1px 0 #888;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim2 5s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip: rect(31px, 9999px, 91px, 0); }
+            20% { clip: rect(6px, 9999px, 83px, 0); }
+            40% { clip: rect(87px, 9999px, 5px, 0); }
+            60% { clip: rect(10px, 9999px, 60px, 0); }
+            80% { clip: rect(45px, 9999px, 32px, 0); }
+            100% { clip: rect(2px, 9999px, 12px, 0); }
+        }
+
+        @keyframes glitch-anim2 {
+            0% { clip: rect(65px, 9999px, 100px, 0); }
+            20% { clip: rect(2px, 9999px, 85px, 0); }
+            40% { clip: rect(40px, 9999px, 2px, 0); }
+            60% { clip: rect(10px, 9999px, 60px, 0); }
+            80% { clip: rect(45px, 9999px, 32px, 0); }
+            100% { clip: rect(2px, 9999px, 12px, 0); }
+        }
+
+        /* --- Hanger Animation --- */
+        .hanger-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 400px;
+            perspective: 1000px;
+        }
+
+        .hanger-svg {
+            width: 250px;
+            height: auto;
+            transform-origin: top center;
+            animation: sway 4s ease-in-out infinite;
+            filter: drop-shadow(0px 10px 10px rgba(0,0,0,0.5));
+        }
+
+        .shirt-outline {
+            fill: none;
+            stroke: #333;
+            stroke-width: 2;
+            stroke-dasharray: 10;
+            animation: dash 20s linear infinite;
+            opacity: 0.5;
+        }
+
+        .hanger-body {
+            fill: none;
+            stroke: var(--text-color);
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @keyframes sway {
+            0% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+            100% { transform: rotate(-5deg); }
+        }
+
+        @keyframes dash {
+            to { stroke-dashoffset: 1000; }
+        }
+
+        /* --- Marquee Footer --- */
+        .marquee-container {
+            position: fixed;
+            bottom: 30px;
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            z-index: 5;
+            border-top: 1px solid #222;
+            border-bottom: 1px solid #222;
+            padding: 10px 0;
+            background: rgba(10,10,10,0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 20s linear infinite;
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* --- Responsive Tweaks --- */
+        @media (max-width: 991px) {
+            .error-code { font-size: 6rem; }
+            .hanger-container { height: 300px; margin-top: 2rem; }
+            .content-wrapper { padding-top: 80px; padding-bottom: 80px; }
+            .text-section { text-align: center; }
+            .visual-section { order: -1; } /* Graphic on top on mobile */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Logo -->
+    <a href="#" class="brand-logo">Twenty-Five First</a>
+
+    <!-- Background Canvas for Thread Animation -->
+    <canvas id="threadCanvas"></canvas>
+
+    <!-- Main Content -->
+    <div class="container-fluid content-wrapper">
+        <div class="container">
+            <div class="row align-items-center">
+                
+                <!-- Left Column: Text -->
+                <div class="col-lg-6 text-section ps-lg-5">
+                    <div class="glitch-wrapper">
+                        <h1 class="error-code glitch" data-text="404">404</h1>
+                    </div>
+                    <h2 class="text-uppercase fw-bold mb-3" style="letter-spacing: 2px;">Wrong Fit.</h2>
+                    <p class="error-text">
+                        The item you are looking for has been discontinued, sold out, or never existed in this collection.
+                    </p>
+                    <a href="{% url "home" %}" class="btn btn-custom">Back to Home</a>
+                </div>
+
+                <!-- Right Column: Animated Hanger -->
+                <div class="col-lg-6 visual-section">
+                    <div class="hanger-container">
+                        <!-- SVG Hanger Animation -->
+                        <svg class="hanger-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <!-- The Hook -->
+                            <path class="hanger-body" d="M100 20 C 100 5, 120 5, 120 20 C 120 30, 100 35, 100 50 L 100 60" />
+                            <!-- The Triangular Body -->
+                            <path class="hanger-body" d="M20 100 L 100 60 L 180 100 L 20 100" />
+                            
+                            <!-- Ghost Shirt Outline (Stylized) -->
+                            <path class="shirt-outline" d="
+                                M 20 100 
+                                L 10 130 
+                                L 40 140 
+                                L 40 250 
+                                L 160 250 
+                                L 160 140 
+                                L 190 130 
+                                L 180 100 
+                            " />
+                        </svg>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Scrolling Marquee Footer -->
+    <div class="marquee-container">
+        <div class="marquee-content">
+            ERROR // PAGE NOT FOUND // TWENTY-FIVE FIRST // MENSWEAR // SYSTEM MALFUNCTION // OUT OF STOCK // ERROR // PAGE NOT FOUND // TWENTY-FIVE FIRST // MENSWEAR // SYSTEM MALFUNCTION // OUT OF STOCK //
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Canvas Animation Script -->
+    <script>
+        const canvas = document.getElementById('threadCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        
+        // Mouse interaction
+        let mouse = { x: null, y: null, radius: 150 };
+
+        window.addEventListener('mousemove', (event) => {
+            mouse.x = event.x;
+            mouse.y = event.y;
+        });
+
+        // Resize handling
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initParticles();
+        }
+        window.addEventListener('resize', resize);
+
+        // Particle Class (The "Threads")
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.dx = (Math.random() - 0.5) * 1; // Slow movement
+                this.dy = (Math.random() - 0.5) * 1;
+                this.size = Math.random() * 1.5; // Thin thread width
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = '#333';
+                ctx.fill();
+            }
+
+            update() {
+                // Bounce off edges
+                if (this.x > width || this.x < 0) this.dx = -this.dx;
+                if (this.y > height || this.y < 0) this.dy = -this.dy;
+
+                // Mouse Interaction
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx*dx + dy*dy);
+
+                if (distance < mouse.radius) {
+                    const forceDirectionX = dx / distance;
+                    const forceDirectionY = dy / distance;
+                    const maxDistance = mouse.radius;
+                    const force = (maxDistance - distance) / maxDistance;
+                    const directionX = forceDirectionX * force * 2; // Repel force
+                    const directionY = forceDirectionY * force * 2;
+
+                    this.x -= directionX;
+                    this.y -= directionY;
+                }
+
+                this.x += this.dx;
+                this.y += this.dy;
+
+                this.draw();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            // Create fewer particles for a minimalist look
+            let numberOfParticles = (width * height) / 15000; 
+            for (let i = 0; i < numberOfParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function connect() {
+            let opacityValue = 1;
+            for (let a = 0; a < particles.length; a++) {
+                for (let b = a; b < particles.length; b++) {
+                    let distance = ((particles[a].x - particles[b].x) * (particles[a].x - particles[b].x))
+                                 + ((particles[a].y - particles[b].y) * (particles[a].y - particles[b].y));
+                    
+                    // Connect particles if close enough
+                    if (distance < (width/7) * (height/7)) {
+                        opacityValue = 1 - (distance / 20000);
+                        ctx.strokeStyle = 'rgba(80, 80, 80,' + opacityValue + ')';
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[a].x, particles[a].y);
+                        ctx.lineTo(particles[b].x, particles[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, width, height);
+            
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+            }
+            connect();
+        }
+
+        // Initialize
+        resize();
+        animate();
+    </script>
+</body>
+</html>

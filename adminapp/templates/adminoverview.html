@@ -1,0 +1,430 @@
+{% extends "adminbase.html" %}
+{% load static %}
+{% block title %}Admin Panel - Dashboard{% endblock title %}
+
+{% block content %}
+<head>
+    <style>
+        :root {
+            --bs-body-bg: #ffffff;
+            --bs-body-color: #000000;
+            --bs-border-radius: 0;
+            --bs-border-radius-sm: 0;
+            --bs-border-radius-lg: 0;
+            --bs-border-radius-xl: 0;
+            --bs-border-radius-xxl: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+            padding: 48px 0 0;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.1);
+            background-color: #f8f9fa;
+            transition: all 0.3s;
+        }
+
+        @media (max-width: 767.98px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main-content {
+                padding-left: 0;
+            }
+        }
+
+        .sidebar-sticky {
+            position: relative;
+            top: 0;
+            height: calc(100vh - 48px);
+            padding-top: .5rem;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            color: #333;
+            border-radius: 0 !important;
+        }
+
+        .nav-link .bi {
+            margin-right: 8px;
+        }
+
+        .nav-link.active,
+        .nav-link:hover {
+            color: #ffffff;
+            background-color: #000000;
+        }
+
+        .main-content {
+            padding-top: 48px;
+            transition: margin-left .3s;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                margin-left: 240px;
+            }
+        }
+
+        .navbar {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,1);
+        }
+
+        .card, .form-control, .btn, .table, .alert, .modal-content, .list-group-item, .dropdown-menu {
+            border-radius: 0 !important;
+            border: 1px solid #000;
+        }
+
+        .btn {
+            border-width: 1px;
+        }
+
+        .btn-dark {
+            background-color: #000;
+            color: #fff;
+            border-color: #000;
+        }
+
+        .btn-dark:hover {
+            background-color: #333;
+            border-color: #333;
+        }
+
+        .btn-outline-dark {
+            color: #000;
+            border-color: #000;
+        }
+
+        .btn-outline-dark:hover {
+            background-color: #000;
+            color: #fff;
+        }
+
+        .card {
+            background-color: #fff;
+            border: 1px solid #000;
+        }
+
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #000;
+        }
+
+        .table {
+            border-color: #000;
+        }
+
+        thead th {
+            border-bottom: 2px solid #000 !important;
+        }
+
+        .form-control:focus {
+            color: #000;
+            background-color: #fff;
+            border-color: #000;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0,0,0,0.25);
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 0.25em 0.6em;
+            font-size: 75%;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border: 1px solid #000;
+            color: #000;
+            background-color: transparent;
+        }
+
+        .status-pill.shipped { background-color: #e9ecef; }
+        .status-pill.delivered { background-color: #d4edda; }
+        .status-pill.pending { background-color: #fff3cd; }
+        .status-pill.cancelled { background-color: #f8d7da; }
+
+        .product-img-sm {
+            width: 6%;
+            height: 12%;
+            object-fit: cover;
+            border: 1px solid #000;
+            margin-right: 10px;
+        }
+
+        .inventory-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .inventory-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .inventory-sku {
+            font-size: 0.85rem;
+            color: #666;
+        }
+    </style>
+</head>
+
+<main class="main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-dark">
+        <h1 class="h2">Dashboard</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" id="dateRangeFilter" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-calendar3"></i> Date Range
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dateRangeFilter">
+                    <li><a class="dropdown-item" href="#" data-range="7">Last 7 Days</a></li>
+                    <li><a class="dropdown-item" href="#" data-range="30">Last 1 Month</a></li>
+                    <li><a class="dropdown-item" href="#" data-range="90">Last 3 Months</a></li>
+                    <li><a class="dropdown-item" href="#" data-range="365">Last 1 Year</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#customRangeModal">Custom Range</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card text-dark h-100">
+                <div class="card-body">
+                    <h5 class="card-title">TOTAL SALES</h5>
+                    <h3 class="fw-bold" id="statTotalSales">₹0.00</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card text-dark h-100">
+                <div class="card-body">
+                    <h5 class="card-title">ORDERS</h5>
+                    <h3 class="fw-bold" id="statTotalOrders">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card text-dark h-100">
+                <div class="card-body">
+                    <h5 class="card-title">RECENT CUSTOMERS</h5>
+                    <h3 class="fw-bold" id="statRecentCustomers">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card text-dark h-100">
+                <div class="card-body">
+                    <h5 class="card-title">PENDING ORDERS</h5>
+                    <h3 class="fw-bold" id="statPendingOrders">0</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Recent Pending Orders</h5>
+            <a href="{% url 'adminorder' %}" class="btn btn-sm btn-outline-dark">View All</a>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead><tr><th>Order ID</th><th>Customer</th><th>Total</th></tr></thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td>{{ order.order_number }}</td>
+                        <td>{{ order.user.username|default:"Anonymous" }}</td>
+                        <td>₹{{ order.total_amount }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center">No pending orders</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Pending Return Requests</h5>
+            <a href="{% url 'adminreturn' %}" class="btn btn-sm btn-outline-dark">View All</a>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for req in return_requests %}
+                <li class="list-group-item">Request #{{ req.id }} - {{ req.order.order_number }}</li>
+                {% empty %}
+                <li class="list-group-item text-center">No pending return requests</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Inventory Alerts</h5>
+            <a href="{% url 'adminproduct' %}" class="btn btn-sm btn-outline-dark">Manage Inventory</a>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for variant in low_stock_items %}
+                <li class="list-group-item">
+                    <div class="inventory-item">
+                        {% if variant.color_variant.primary_media %}
+                            <img src="{{ variant.color_variant.primary_media.0.media_file.url }}" alt="{{ variant.color_variant.shirt.name }} image" class="product-img-sm">
+                        {% else %}
+                            <img src="{% static 'img_asset/placeholder.png' %}" alt="placeholder" class="product-img-sm">
+                        {% endif %}
+                        <div class="inventory-details">
+                            <div class="fw-bold">{{ variant.color_variant.shirt.name }} <span class="inventory-sku">({{ variant.sku }})</span></div>
+                            <div>{{ variant.size.name }} — {{ variant.stock }} left</div>
+                        </div>
+                        <div>
+                            <a href="{% url 'adminproduct' %}" class="btn btn-sm btn-outline-dark">Manage</a>
+                        </div>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-center">No low stock items</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Open Customer Queries</h5>
+            <a href="{% url 'adminsupport' %}" class="btn btn-sm btn-outline-dark">View All</a>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for query in customer_queries %}
+                <li class="list-group-item">#{{ query.ticket_id }} - {{ query.subject }}</li>
+                {% empty %}
+                <li class="list-group-item text-center">No open customer queries</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="card mt-4 mb-5">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Pending Bulk Orders</h5>
+            <a href="{% url 'bulk_query_management' %}" class="btn btn-sm btn-outline-dark">View All</a>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for bulk in bulk_orders %}
+                <li class="list-group-item">#{{ bulk.ticket_id }} - {{ bulk.full_name }}</li>
+                {% empty %}
+                <li class="list-group-item text-center">No pending bulk orders</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="customRangeModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5>Select Custom Date Range</h5></div>
+      <div class="modal-body">
+        <input type="date" id="startDate" class="form-control mb-2">
+        <input type="date" id="endDate" class="form-control">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-dark" id="applyCustomRangeBtn">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function fetchStats(start=null, end=null){
+    let url = "{% url 'dashboard_stats' %}";
+    let body = new URLSearchParams();
+    if (start && end) {
+        body.append('start', start);
+        body.append('end', end);
+    }
+    const csrftoken = getCookie('csrftoken');
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Accept': 'application/json'
+        },
+        body: body
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success){
+            document.getElementById('statTotalSales').textContent = '₹' + data.total_sales;
+            document.getElementById('statTotalOrders').textContent = data.total_orders;
+            document.getElementById('statRecentCustomers').textContent = data.recent_customers_count;
+            document.getElementById('statPendingOrders').textContent = data.pending_orders_count;
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+    fetchStats();
+
+    document.querySelectorAll('[data-range]').forEach(item => {
+        item.addEventListener('click', function(e){
+            e.preventDefault();
+            let days = parseInt(this.dataset.range);
+            let end = new Date();
+            let start = new Date();
+            start.setDate(end.getDate() - days);
+            fetchStats(start.toISOString().split('T')[0], end.toISOString().split('T')[0]);
+        });
+    });
+
+    document.getElementById('applyCustomRangeBtn').addEventListener('click', function(){
+        let start = document.getElementById('startDate').value;
+        let end = document.getElementById('endDate').value;
+        if (!start || !end) return;
+        fetchStats(start, end);
+        var modal = bootstrap.Modal.getInstance(document.getElementById('customRangeModal'));
+        if (modal) modal.hide();
+    });
+});
+</script>
+{% endblock content %}

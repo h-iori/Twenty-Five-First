@@ -1,0 +1,256 @@
+{% extends "adminbase.html" %}
+{% load static %}
+{% block title %}Admin Panel - Product Review{% endblock title %}
+
+{% block content %}
+<head>
+    <style>
+        /* [PORTFOLIO NOTE] Minimalist Admin CSS */
+        :root {
+            --bs-body-bg: #ffffff;
+            --bs-body-color: #000000;
+            --bs-border-radius: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+        /* ... Modal/Table CSS ... */
+        .modal-content {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            border-radius: 0 !important;
+            border: 1px solid #000;
+        }
+        .main-content {
+            padding-top: 48px;
+            transition: margin-left .3s;
+        }
+        @media (min-width: 768px) {
+            .main-content { margin-left: 240px; }
+        }
+        .product-list-thumb {
+            width: 60px !important;
+            height: 106.67px !important;
+            aspect-ratio: 9 / 16 !important;
+            object-fit: cover !important;
+            border: 1px solid #000;
+        }
+        /* ... Other Utility Classes ... */
+    </style>
+</head>
+
+<div class="container-fluid">
+    <div class="row">
+        <main class="main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-dark">
+                <h1 class="h2">Product Review Management</h1>
+            </div>
+
+            <div class="alert alert-success alert-dismissible fade" role="alert" id="successAlert">
+                <div id="successMessage"></div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0"><i class="bi bi-funnel-fill"></i> Filters & Search</h5></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search..." value="{{ search_query }}">
+                                <button class="btn btn-dark" type="button" id="searchButton">Search</button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="ratingFilter">
+                                <option value="" {% if not rating_filter %}selected{% endif %}>All Ratings</option>
+                                </select>
+                        </div>
+                        </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-table"></i> Reviews</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" id="bulkActions" data-bs-toggle="dropdown" disabled>Bulk Actions</button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item text-danger" href="#" data-action="DELETE">Delete Selected</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body table-responsive">
+                    <table class="table table-hover" id="reviewsTable">
+                        <thead>
+                            <tr>
+                                <th><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
+                                <th>ID</th>
+                                <th>Image</th>
+                                <th>Shirt</th>
+                                <th>User</th>
+                                <th>Rating</th>
+                                <th>Review</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reviewsTableBody">
+                            {% for review in page_obj %}
+                            <tr>
+                                <td><input class="form-check-input row-checkbox" type="checkbox" value="{{ review.id }}"></td>
+                                <td>{{ review.id }}</td>
+                                <td>
+                                    {% if review.primary_image_url %}
+                                        <img src="{{ review.primary_image_url }}" class="product-list-thumb">
+                                    {% else %}
+                                        <div class="product-list-thumb bg-light text-muted">N/A</div>
+                                    {% endif %}
+                                </td>
+                                <td>{{ review.shirt.name }}</td>
+                                <td>{{ review.user.username|default:"Anonymous" }}</td>
+                                <td>{{ review.rating }}</td>
+                                <td title="{{ review.review_text }}">{{ review.review_text|truncatechars:30 }}</td>
+                                <td>{{ review.created_at|date:"Y-m-d" }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-dark edit-review" data-review-id="{{ review.id }}" data-bs-toggle="modal" data-bs-target="#reviewModal"><i class="bi bi-pencil-fill"></i></button>
+                                    <button class="btn btn-sm btn-outline-dark delete-review" data-review-id="{{ review.id }}"><i class="bi bi-trash-fill"></i></button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="9" class="text-center">No reviews found</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="load-more-container" id="loadMoreContainer">
+                        {% if page_obj.has_next %}
+                        <button class="btn btn-outline-dark" id="loadMoreButton" data-next-page="{{ page_obj.next_page_number }}">Load More</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Review Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editReviewId">
+                <div class="mb-3"><strong>Review ID:</strong> <span id="detailReviewId"></span></div>
+                <div class="mb-3">
+                    <label class="form-label">Rating</label>
+                    <select id="editRating" class="form-select">
+                        <option value="1">1 Star</option>
+                        <option value="5">5 Stars</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Review Text</label>
+                    <textarea id="editReviewText" class="form-control" rows="5"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-danger" id="deleteReviewButton">Delete</button>
+                <div>
+                    <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-dark" id="saveReviewButton">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // [SECURITY] API Endpoint Obfuscation
+    const API = {
+        LIST: 'hidden',
+        DETAILS: 'hidden',
+        UPDATE: 'hidden',
+        BULK: 'hidden'
+    };
+
+    // ... DOM Elements ...
+
+    function fetchData(page, replace = false) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', page);
+        
+        fetch(`${API.LIST}?${params}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTableBody = doc.getElementById('reviewsTableBody').innerHTML;
+            
+            if (replace) {
+                document.getElementById('reviewsTableBody').innerHTML = newTableBody;
+                updateBulkActionsState();
+            } else {
+                document.getElementById('reviewsTableBody').insertAdjacentHTML('beforeend', newTableBody);
+            }
+            attachEventListeners();
+        });
+    }
+
+    // Modal Handling
+    function handleEditReview() {
+        const reviewId = this.getAttribute('data-review-id');
+        fetch(`${API.DETAILS}`.replace('0', reviewId), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                document.getElementById('editReviewId').value = reviewId;
+                document.getElementById('editRating').value = data.data.rating;
+                document.getElementById('editReviewText').value = data.data.review_text;
+                // ... Populate other details ...
+            }
+        });
+    }
+
+    // Save Changes
+    document.getElementById('saveReviewButton').addEventListener('click', () => {
+        const payload = {
+            review_id: document.getElementById('editReviewId').value,
+            rating: document.getElementById('editRating').value,
+            review_text: document.getElementById('editReviewText').value
+        };
+        
+        fetch(API.UPDATE, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            fetchData(1, true);
+        });
+    });
+
+    // Bulk Delete
+    document.querySelectorAll('.dropdown-item[data-action="DELETE"]').forEach(item => {
+        item.addEventListener('click', function(e) {
+            const ids = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+            if(ids.length && confirm(`Delete ${ids.length} reviews?`)) {
+                fetch(API.BULK, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: JSON.stringify({ review_ids: ids, action: 'DELETE' })
+                }).then(() => fetchData(1, true));
+            }
+        });
+    });
+
+    attachEventListeners();
+});
+</script>
+{% endblock content %}

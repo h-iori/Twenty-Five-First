@@ -1,0 +1,1052 @@
+{% extends "adminbase.html" %}
+{% load static %}
+{% block title %}Admin Panel - Coupons{% endblock title %}
+
+{% block content %}
+<head>
+    <style>
+        :root {
+            --bs-body-bg: #ffffff;
+            --bs-body-color: #000000;
+            --bs-border-radius: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+
+        .main-content {
+            padding-top: 48px;
+            transition: margin-left .3s;
+        }
+        .sort-link {
+            color: #000;
+            text-decoration: none !important;
+        }
+        .sort-link:hover {
+            color: #000;
+            text-decoration: underline !important;
+        }
+        @media (min-width: 768px) {
+            .main-content {
+                margin-left: 240px;
+            }
+        }
+
+        .card, .form-control, .btn, .table, .alert, .modal-content, .list-group-item, .dropdown-menu {
+            border-radius: 0 !important;
+            border: 1px solid #000;
+        }
+        
+        .btn { border-width: 1px; }
+        
+        .btn-dark {
+            background-color: #000;
+            color: #fff;
+            border-color: #000;
+        }
+        
+        .btn-dark:hover {
+            background-color: #333;
+            border-color: #333;
+        }
+
+        .btn-outline-dark {
+            color: #000;
+            border-color: #000;
+        }
+
+        .btn-outline-dark:hover {
+            background-color: #000;
+            color: #fff;
+        }
+        
+        .card {
+            background-color: #fff;
+            border: 1px solid #000;
+        }
+        
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #000;
+        }
+        
+        .table { border-color: #000; }
+        
+        thead th {
+            border-bottom: 2px solid #000 !important;
+        }
+
+        thead th .bi {
+            font-size: 0.8em;
+            margin-left: 4px;
+        }
+        
+        .status-pill {
+            display: inline-block;
+            padding: 0.25em 0.6em;
+            font-size: 75%;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border: 1px solid #000;
+            color: #000;
+            background-color: transparent;
+        }
+        .status-pill.active { background-color: #d4edda; }
+        .status-pill.inactive { background-color: #f8d7da; }
+
+        .load-more-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            margin-bottom: 2px;
+            display: block;
+        }
+        .detail-value {
+            font-weight: 500;
+            margin-bottom: 12px;
+            word-wrap: break-word;
+        }
+        .info-card {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef !important;
+            height: 100%;
+        }
+        .usage-table-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #000;
+        }
+        .usage-table-container table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 1;
+        }
+        .invalid-feedback-custom {
+            color: #dc3545;
+            font-size: 0.875em;
+            display: none;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+
+<div class="container-fluid">
+    <div class="row">
+        <main class="main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-dark">
+                <h1 class="h2">Coupon Management</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#createCouponModal">
+                        <i class="bi bi-plus-circle-fill me-1"></i> Create New Coupon
+                    </button>
+                </div>
+            </div>
+
+            {% if messages %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                {% for message in messages %}
+                <div>{{ message }}</div>
+                {% endfor %}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endif %}
+
+            <div class="alert alert-success alert-dismissible fade" role="alert" id="successAlert">
+                <div id="successMessage"></div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-funnel-fill"></i> Filters & Search</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search by Coupon Code or Description..." value="{{ search_query }}">
+                                <button class="btn btn-dark" type="button" id="searchButton"><i class="bi bi-search"></i> Search</button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="discountTypeFilter">
+                                <option value="" {% if not discount_type_filter %}selected{% endif %}>All Discount Types</option>
+                                {% for type, label in discount_types %}
+                                <option value="{{ type }}" {% if discount_type_filter == type %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="statusFilter">
+                                <option value="" {% if not status_filter %}selected{% endif %}>Any Status</option>
+                                <option value="True" {% if status_filter == "True" %}selected{% endif %}>Active</option>
+                                <option value="False" {% if status_filter == "False" %}selected{% endif %}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="appliesToAllFilter">
+                                <option value="" {% if not applies_to_all_filter %}selected{% endif %}>Any Application</option>
+                                <option value="True" {% if applies_to_all_filter == "True" %}selected{% endif %}>Applies to All</option>
+                                <option value="False" {% if applies_to_all_filter == "False" %}selected{% endif %}>Specific Items</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control" id="minOrderFilter" placeholder="Min Order Value" value="{{ min_order_filter }}">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" class="form-control" id="validFromFilter" value="{{ valid_from_filter }}">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" class="form-control" id="validUntilFilter" value="{{ valid_until_filter }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-table"></i> Coupons</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" id="bulkActions" data-bs-toggle="dropdown" aria-expanded="false" disabled>
+                                Bulk Actions
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="bulkActions">
+                                <li><a class="dropdown-item" href="#" data-action="ACTIVATE">Activate Selected</a></li>
+                                <li><a class="dropdown-item" href="#" data-action="DEACTIVATE">Deactivate Selected</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" data-action="DELETE">Delete Selected</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="couponTable">
+                            <thead>
+                                <tr>
+                                    <th><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
+                                    <th>Code</th>
+                                    <th>Type</th>
+                                    <th>Value</th>
+                                    <th>
+                                        <a href="#" class="sort-link" data-sort="{% if sort_by == 'is_active' %}-is_active{% else %}is_active{% endif %}">
+                                            Status <i class="bi bi-arrow-down-up"></i>
+                                        </a>
+                                    </th>
+                                    <th>
+                                        <a href="#" class="sort-link" data-sort="{% if sort_by == 'valid_from' %}-valid_from{% else %}valid_from{% endif %}">
+                                            Valid From <i class="bi bi-arrow-down-up"></i>
+                                        </a>
+                                    </th>
+                                    <th>
+                                        <a href="#" class="sort-link" data-sort="{% if sort_by == 'valid_until' %}-valid_until{% else %}valid_until{% endif %}">
+                                            Valid Until <i class="bi bi-arrow-down-up"></i>
+                                        </a>
+                                    </th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="couponTableBody">
+                                {% for coupon in page_obj %}
+                                <tr>
+                                    <td><input class="form-check-input row-checkbox" type="checkbox" value="{{ coupon.code }}" data-is-active="{{ coupon.is_active }}"></td>
+                                    <td><strong>{{ coupon.code }}</strong></td>
+                                    <td>{{ coupon.get_discount_type_display }}</td>
+                                    <td>
+                                        {% if coupon.discount_type == 'PERCENTAGE' %}
+                                            {{ coupon.discount_value }}%
+                                        {% elif coupon.discount_type == 'FIXED' %}
+                                            ₹{{ coupon.discount_value }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="status-pill {{ coupon.is_active|yesno:'active,inactive' }}">{{ coupon.is_active|yesno:"Active,Inactive" }}</span></td>
+                                    <td>{{ coupon.valid_from|date:"Y-m-d" }}</td>
+                                    <td>{{ coupon.valid_until|date:"Y-m-d"|default:"-" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-dark view-details" data-coupon-code="{{ coupon.code }}" data-bs-toggle="modal" data-bs-target="#viewDetailsModal"><i class="bi bi-eye-fill"></i></button>
+                                        <button class="btn btn-sm btn-outline-dark edit-status" data-coupon-code="{{ coupon.code }}" data-coupon-status="{{ coupon.is_active }}" data-bs-toggle="modal" data-bs-target="#editCouponModal"><i class="bi bi-pencil-fill"></i></button>
+                                        <button class="btn btn-sm btn-outline-dark delete-coupon" data-coupon-code="{{ coupon.code }}"><i class="bi bi-trash-fill"></i></button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center">No coupons found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="load-more-container" id="loadMoreContainer">
+                        {% if page_obj.has_next %}
+                        <button class="btn btn-outline-dark" id="loadMoreButton" data-next-page="{{ page_obj.next_page_number }}">Load More</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="viewDetailsModal" tabindex="-1" aria-labelledby="viewDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title" id="viewDetailsModalLabel">Coupon Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div class="d-flex justify-content-between align-items-end mb-4 pb-3 border-bottom">
+                    <div>
+                        <h2 class="mb-1 fw-bold font-monospace" id="detailCode"></h2>
+                        <div class="text-muted small">
+                            Created: <span id="detailCreated"></span>
+                        </div>
+                    </div>
+                    <div class="text-end" id="detailStatusDisplay"></div>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="card info-card border-0 h-100">
+                            <div class="card-body">
+                                <h6 class="card-title text-uppercase text-muted fw-bold small mb-3">
+                                    <i class="bi bi-tag-fill"></i> General Information
+                                </h6>
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <span class="detail-label">Discount Type</span>
+                                        <div class="detail-value" id="detailDiscountType"></div>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="detail-label">Discount Value</span>
+                                        <div class="detail-value fs-5" id="detailDiscountValue"></div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <span class="detail-label">Min. Order Value</span>
+                                        <div class="detail-value" id="detailMinOrderValue"></div>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="detail-label">Stackable</span>
+                                        <div class="detail-value" id="detailCanStack"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="detail-label">Description</span>
+                                    <div class="detail-value text-break" id="detailDescription"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card info-card border-0 h-100">
+                            <div class="card-body">
+                                <h6 class="card-title text-uppercase text-muted fw-bold small mb-3">
+                                    <i class="bi bi-clock-history"></i> Validity & Limits
+                                </h6>
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <span class="detail-label">Valid From</span>
+                                        <div class="detail-value" id="detailValidFrom"></div>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="detail-label">Valid Until</span>
+                                        <div class="detail-value" id="detailValidUntil"></div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <span class="detail-label">Total Times Used</span>
+                                        <div class="detail-value fw-bold" id="detailTotalUsageCount"></div>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="detail-label">Total Max Uses</span>
+                                        <div class="detail-value" id="detailMaxUses"></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <span class="detail-label">Max Uses Per User</span>
+                                        <div class="detail-value" id="detailMaxUsesPerUser"></div>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="detail-label">Application Scope</span>
+                                        <div class="detail-value" id="detailAppliesToAll"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-12">
+                         <div class="card info-card border-0">
+                             <div class="card-body">
+                                <h6 class="card-title text-uppercase text-muted fw-bold small mb-3">
+                                    <i class="bi bi-list-check"></i> Restrictions
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <span class="detail-label">Linked Products</span>
+                                        <div class="detail-value" id="detailProducts"></div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <span class="detail-label">Linked Categories</span>
+                                        <div class="detail-value" id="detailCategories"></div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <span class="detail-label">Linked Users</span>
+                                        <div class="detail-value" id="detailUsers"></div>
+                                    </div>
+                                </div>
+                             </div>
+                          </div>
+                    </div>
+                </div>
+
+                <h6 class="text-uppercase text-muted fw-bold small mb-3 ps-1">Usage History</h6>
+                <div class="usage-table-container mb-2">
+                    <table class="table table-hover table-sm mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>User</th>
+                                <th>Order #</th>
+                                <th>Discount</th>
+                                <th>Applied At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usageHistoryBody"></tbody>
+                    </table>
+                </div>
+                <div class="text-center">
+                      <button class="btn btn-sm btn-outline-dark" id="loadMoreUsageBtn" style="display: none;">Load More Usage</button>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editCouponModal" tabindex="-1" aria-labelledby="editCouponModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCouponModalLabel">Edit Coupon</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editOriginalCode">
+                <div class="mb-3">
+                    <label for="editCouponCodeInput" class="form-label">Coupon Code</label>
+                    <input type="text" class="form-control" id="editCouponCodeInput" required style="text-transform: uppercase;">
+                    <div class="invalid-feedback-custom" id="editCodeFeedback">Code is required and cannot contain spaces.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="statusSelect" class="form-label">Status</label>
+                    <select class="form-select" id="statusSelect">
+                        <option value="True">Active</option>
+                        <option value="False">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-dark" id="saveEditButton">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="createCouponModal" tabindex="-1" aria-labelledby="createCouponModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createCouponModalLabel">Create New Coupon</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createCouponForm">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="createCode" class="form-label">Coupon Code</label>
+                            <input type="text" class="form-control" id="createCode" required style="text-transform: uppercase;">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="createStatus" class="form-label">Status</label>
+                            <select class="form-select" id="createStatus">
+                                <option value="True">Active</option>
+                                <option value="False">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="createDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="createDescription" rows="2"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="createDiscountType" class="form-label">Discount Type</label>
+                            <select class="form-select" id="createDiscountType" required>
+                                {% for type, label in discount_types %}
+                                <option value="{{ type }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="createDiscountValue" class="form-label">Value</label>
+                            <input type="number" class="form-control" id="createDiscountValue" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="createMinOrderValue" class="form-label">Min Order Value</label>
+                            <input type="number" class="form-control" id="createMinOrderValue">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="createValidFrom" class="form-label">Valid From</label>
+                            <input type="date" class="form-control" id="createValidFrom" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="createValidUntil" class="form-label">Valid Until</label>
+                            <input type="date" class="form-control" id="createValidUntil">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="createMaxUses" class="form-label">Max Uses (Total)</label>
+                            <input type="number" class="form-control" id="createMaxUses">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="createMaxUsesPerUser" class="form-label">Max Uses (Per User)</label>
+                            <input type="number" class="form-control" id="createMaxUsesPerUser">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                             <label for="createCanStack" class="form-label">Stackable?</label>
+                            <select class="form-select" id="createCanStack">
+                                <option value="False">No</option>
+                                <option value="True">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <label for="createAppliesToAll" class="form-label">Applies to All Products?</label>
+                        <select class="form-select" id="createAppliesToAll">
+                            <option value="True">Yes</option>
+                            <option value="False">No</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="createProducts" class="form-label">Linked Products (IDs, comma-separated)</label>
+                        <input type="text" class="form-control" id="createProducts" placeholder="e.g. 1, 5, 10">
+                    </div>
+                    <div class="mb-3">
+                        <label for="createCategories" class="form-label">Linked Categories (IDs, comma-separated)</label>
+                        <input type="text" class="form-control" id="createCategories" placeholder="e.g. 1, 2">
+                    </div>
+                    <div class="mb-3">
+                        <label for="createUsers" class="form-label">Linked Users (IDs, comma-separated)</label>
+                        <input type="text" class="form-control" id="createUsers" placeholder="e.g. 45, 67">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-dark" id="saveCouponButton">Save Coupon</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchButton = document.getElementById('searchButton');
+    const searchInput = document.getElementById('searchInput');
+    const discountTypeFilter = document.getElementById('discountTypeFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const appliesToAllFilter = document.getElementById('appliesToAllFilter');
+    const minOrderFilter = document.getElementById('minOrderFilter');
+    const validFromFilter = document.getElementById('validFromFilter');
+    const validUntilFilter = document.getElementById('validUntilFilter');
+    const bulkActionsButton = document.getElementById('bulkActions');
+    const couponTableBody = document.getElementById('couponTableBody');
+    let loadMoreButton = document.getElementById('loadMoreButton');
+    const loadMoreContainer = document.getElementById('loadMoreContainer');
+    const successAlert = document.getElementById('successAlert');
+    const successMessage = document.getElementById('successMessage');
+    
+    let currentDetailCouponCode = null;
+    let nextUsagePage = null;
+    const loadMoreUsageBtn = document.getElementById('loadMoreUsageBtn');
+
+    function showSuccessAlert(message) {
+        successAlert.classList.remove('show', 'fade');
+        successAlert.style.display = 'block';
+        successMessage.textContent = message;
+        setTimeout(() => {
+            successAlert.classList.add('show');
+        }, 10);
+        setTimeout(() => {
+            successAlert.classList.remove('show');
+            setTimeout(() => {
+                successAlert.style.display = 'none';
+            }, 150);
+        }, 3000);
+    }
+
+    function updateQueryString() {
+        const params = new URLSearchParams();
+        if (searchInput.value) params.set('search', searchInput.value);
+        if (discountTypeFilter.value) params.set('discount_type', discountTypeFilter.value);
+        if (statusFilter.value) params.set('status', statusFilter.value);
+        if (appliesToAllFilter.value) params.set('applies_to_all', appliesToAllFilter.value);
+        if (minOrderFilter.value) params.set('min_order', minOrderFilter.value);
+        if (validFromFilter.value) params.set('valid_from', validFromFilter.value);
+        if (validUntilFilter.value) params.set('valid_until', validUntilFilter.value);
+        params.set('sort_by', new URLSearchParams(window.location.search).get('sort_by') || '-valid_from');
+        params.set('page', 1);
+        window.history.replaceState({}, '', 'hidden');
+        fetchData(1, true);
+    }
+
+    function attachSortListeners() {
+        const sortLinks = document.querySelectorAll('.sort-link');
+        sortLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const sortBy = this.getAttribute('data-sort');
+                const params = new URLSearchParams(window.location.search);
+                params.set('sort_by', sortBy);
+                params.set('page', 1);
+                window.history.replaceState({}, '', 'hidden');
+                fetchData(1, true);
+            });
+        });
+    }
+
+    function fetchData(page, replace = false) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', page);
+        fetch('hidden', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTableBody = doc.getElementById('couponTableBody').innerHTML;
+            const newLoadMoreContainer = doc.querySelector('.load-more-container');
+            
+            const newTableHead = doc.querySelector('#couponTable thead');
+            const currentTableHead = document.querySelector('#couponTable thead');
+            
+            if (replace) {
+                couponTableBody.innerHTML = newTableBody;
+                if (currentTableHead && newTableHead) {
+                    currentTableHead.innerHTML = newTableHead.innerHTML;
+                    attachSortListeners();
+                }
+                
+                const selectAllCb = document.getElementById('selectAllCheckbox');
+                if (selectAllCb) selectAllCb.checked = false;
+                updateBulkActionsState();
+            } else {
+                couponTableBody.insertAdjacentHTML('beforeend', newTableBody);
+            }
+            loadMoreContainer.innerHTML = newLoadMoreContainer ? newLoadMoreContainer.innerHTML : '';
+            loadMoreButton = document.getElementById('loadMoreButton');
+            if (loadMoreButton) {
+                loadMoreButton.addEventListener('click', () => {
+                    const nextPage = loadMoreButton.getAttribute('data-next-page');
+                    fetchData(nextPage, false);
+                });
+            }
+            attachEventListeners();
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    }
+
+    function handleSelectAllChange() {
+        document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateBulkActionsState();
+    }
+
+    function attachEventListeners() {
+        document.querySelectorAll('.view-details').forEach(button => {
+            button.removeEventListener('click', handleViewDetails);
+            button.addEventListener('click', handleViewDetails);
+        });
+
+        document.querySelectorAll('.edit-status').forEach(button => {
+            button.removeEventListener('click', handleEditCoupon);
+            button.addEventListener('click', handleEditCoupon);
+        });
+
+        document.querySelectorAll('.delete-coupon').forEach(button => {
+            button.removeEventListener('click', handleDeleteCoupon);
+            button.addEventListener('click', handleDeleteCoupon);
+        });
+
+        document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+            checkbox.removeEventListener('change', updateBulkActionsState);
+            checkbox.addEventListener('change', updateBulkActionsState);
+        });
+
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.removeEventListener('change', handleSelectAllChange);
+            selectAllCheckbox.addEventListener('change', handleSelectAllChange);
+        }
+    }
+
+    function appendUsageRows(history) {
+        const tbody = document.getElementById('usageHistoryBody');
+        if (history && history.length > 0) {
+             history.forEach(usage => {
+                const tr = document.createElement('tr');
+                
+                let userHtml = usage.user;
+                if (usage.user_url) {
+                    userHtml = `<a href="${usage.user_url}" class="text-decoration-underline text-dark font-monospace" target="_blank">${usage.user}</a>`;
+                }
+
+                let orderHtml = usage.order;
+                if (usage.order_url) {
+                    orderHtml = `<a href="${usage.order_url}" class="text-decoration-underline text-dark font-monospace" target="_blank">${usage.order}</a>`;
+                }
+
+                tr.innerHTML = `
+                    <td>${userHtml}</td>
+                    <td>${orderHtml}</td>
+                    <td>₹${usage.discount_amount}</td>
+                    <td>${usage.applied_at}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else if (tbody.children.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No usage history</td></tr>';
+        }
+    }
+
+    function fetchUsageHistory(page) {
+        if (!currentDetailCouponCode) return;
+        
+        loadMoreUsageBtn.disabled = true;
+        loadMoreUsageBtn.textContent = 'Loading...';
+
+        fetch('hidden', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                appendUsageRows(data.data.usage_history);
+                
+                if (data.data.has_next_usage) {
+                    nextUsagePage = data.data.next_usage_page;
+                    loadMoreUsageBtn.style.display = 'inline-block';
+                } else {
+                    nextUsagePage = null;
+                    loadMoreUsageBtn.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => console.error('Error fetching usage:', error))
+        .finally(() => {
+            loadMoreUsageBtn.disabled = false;
+            loadMoreUsageBtn.textContent = 'Load More Usage';
+        });
+    }
+
+    function handleViewDetails() {
+        const couponCode = this.getAttribute('data-coupon-code');
+        currentDetailCouponCode = couponCode;
+        nextUsagePage = 1;
+        
+        document.getElementById('usageHistoryBody').innerHTML = '';
+        loadMoreUsageBtn.style.display = 'none';
+
+        fetch('hidden', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('detailCode').textContent = data.data.code;
+                document.getElementById('detailStatusDisplay').innerHTML = `
+                    <span class="status-pill ${data.data.is_active ? 'active' : 'inactive'} fs-6">
+                        ${data.data.is_active ? 'Active' : 'Inactive'}
+                    </span>`;
+                
+                document.getElementById('detailDiscountType').textContent = data.data.discount_type;
+                const prefix = data.data.discount_type === 'Fixed Amount' ? '₹' : '';
+                const suffix = data.data.discount_type === 'Percentage' ? '%' : '';
+                document.getElementById('detailDiscountValue').textContent = data.data.discount_value ? `${prefix}${data.data.discount_value}${suffix}` : 'N/A';
+                
+                document.getElementById('detailMinOrderValue').textContent = data.data.min_order_value ? `₹${data.data.min_order_value}` : 'None';
+                document.getElementById('detailCanStack').innerHTML = data.data.can_stack ? '<span class="badge bg-dark">Yes</span>' : '<span class="badge bg-light text-dark border">No</span>';
+                document.getElementById('detailDescription').textContent = data.data.description || 'N/A';
+                
+                document.getElementById('detailValidFrom').textContent = data.data.valid_from;
+                document.getElementById('detailValidUntil').textContent = data.data.valid_until || 'Unlimited';
+                
+                document.getElementById('detailTotalUsageCount').textContent = data.data.total_usage_count;
+                
+                document.getElementById('detailMaxUses').textContent = data.data.max_uses || 'Unlimited';
+                document.getElementById('detailMaxUsesPerUser').textContent = data.data.max_uses_per_user || 'Unlimited';
+                
+                document.getElementById('detailAppliesToAll').innerHTML = data.data.applies_to_all 
+                    ? '<span class="badge bg-success">All Products</span>' 
+                    : '<span class="badge bg-warning text-dark">Specific Items</span>';
+
+                const productsHtml = data.data.products && data.data.products.length ? data.data.products.map(p => `<span class="badge bg-light text-dark border me-1">${p}</span>`).join('') : '<span class="text-muted small">None</span>';
+                document.getElementById('detailProducts').innerHTML = productsHtml;
+                
+                const catsHtml = data.data.categories && data.data.categories.length ? data.data.categories.map(c => `<span class="badge bg-light text-dark border me-1">${c}</span>`).join('') : '<span class="text-muted small">None</span>';
+                document.getElementById('detailCategories').innerHTML = catsHtml;
+
+                const usersHtml = data.data.users && data.data.users.length ? data.data.users.map(u => `<span class="badge bg-light text-dark border me-1">${u}</span>`).join('') : '<span class="text-muted small">None</span>';
+                document.getElementById('detailUsers').innerHTML = usersHtml;
+
+                appendUsageRows(data.data.usage_history);
+
+                if (data.data.has_next_usage) {
+                    nextUsagePage = data.data.next_usage_page;
+                    loadMoreUsageBtn.style.display = 'inline-block';
+                }
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => console.error('Error fetching details:', error));
+    }
+    
+    loadMoreUsageBtn.addEventListener('click', function() {
+        if (nextUsagePage) {
+            fetchUsageHistory(nextUsagePage);
+        }
+    });
+
+    function handleEditCoupon() {
+        const couponCode = this.getAttribute('data-coupon-code');
+        const couponStatus = this.getAttribute('data-coupon-status');
+        
+        document.getElementById('editOriginalCode').value = couponCode;
+        document.getElementById('editCouponCodeInput').value = couponCode;
+        document.getElementById('statusSelect').value = couponStatus === 'True' ? 'True' : 'False';
+        document.getElementById('editCodeFeedback').style.display = 'none';
+        document.getElementById('editCouponCodeInput').classList.remove('is-invalid');
+    }
+
+    document.getElementById('editCouponCodeInput').addEventListener('input', function(e) {
+        const val = e.target.value.toUpperCase().replace(/\s/g, '');
+        e.target.value = val;
+        
+        if (val.length === 0) {
+            document.getElementById('editCodeFeedback').textContent = 'Code cannot be empty.';
+            document.getElementById('editCodeFeedback').style.display = 'block';
+            e.target.classList.add('is-invalid');
+        } else if (val.length > 50) {
+            document.getElementById('editCodeFeedback').textContent = 'Code exceeds 50 characters.';
+            document.getElementById('editCodeFeedback').style.display = 'block';
+            e.target.classList.add('is-invalid');
+        } else {
+            document.getElementById('editCodeFeedback').style.display = 'none';
+            e.target.classList.remove('is-invalid');
+        }
+    });
+
+    function handleDeleteCoupon() {
+        const couponCode = this.getAttribute('data-coupon-code');
+        if (confirm(`Are you sure you want to delete coupon ${couponCode}?`)) {
+            fetch('hidden', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ coupon_codes: [couponCode], action: 'DELETE' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessAlert(`Coupon ${couponCode} deleted successfully`);
+                    fetchData(1, true);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error deleting coupon:', error));
+        }
+    }
+
+    function updateBulkActionsState() {
+        const allRows = document.querySelectorAll('.row-checkbox');
+        const checkedRows = document.querySelectorAll('.row-checkbox:checked');
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        
+        if(selectAllCheckbox && allRows.length > 0) {
+            selectAllCheckbox.checked = (checkedRows.length === allRows.length);
+        }
+        bulkActionsButton.disabled = checkedRows.length === 0;
+    }
+
+    searchButton.addEventListener('click', () => updateQueryString());
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') updateQueryString();
+    });
+    discountTypeFilter.addEventListener('change', () => updateQueryString());
+    statusFilter.addEventListener('change', () => updateQueryString());
+    appliesToAllFilter.addEventListener('change', () => updateQueryString());
+    minOrderFilter.addEventListener('change', () => updateQueryString());
+    validFromFilter.addEventListener('change', () => updateQueryString());
+    validUntilFilter.addEventListener('change', () => updateQueryString());
+
+    document.querySelectorAll('.dropdown-item[data-action]').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const action = this.getAttribute('data-action');
+            const couponCodes = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+            const actionText = action === 'DELETE' ? 'delete' : `change status to ${action.toLowerCase()}`;
+            if (couponCodes.length && confirm(`Are you sure you want to ${actionText} ${couponCodes.length} coupon(s)?`)) {
+                fetch('hidden', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ coupon_codes: couponCodes, action: action })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccessAlert(`${couponCodes.length} coupon(s) ${actionText} successfully`);
+                        fetchData(1, true);
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => console.error('Error performing bulk action:', error));
+            }
+        });
+    });
+
+    document.getElementById('saveEditButton').addEventListener('click', function() {
+        const originalCode = document.getElementById('editOriginalCode').value;
+        const newCode = document.getElementById('editCouponCodeInput').value;
+        const newStatus = document.getElementById('statusSelect').value;
+        
+        if (!newCode) {
+            document.getElementById('editCodeFeedback').textContent = 'Code cannot be empty.';
+            document.getElementById('editCodeFeedback').style.display = 'block';
+            document.getElementById('editCouponCodeInput').classList.add('is-invalid');
+            return;
+        }
+
+        fetch('hidden', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ 
+                original_code: originalCode, 
+                new_code: newCode, 
+                status: newStatus 
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessAlert(`Coupon details updated successfully`);
+                fetchData(1, true);
+                document.querySelector('#editCouponModal .btn-close').click();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => console.error('Error updating details:', error));
+    });
+
+    document.getElementById('saveCouponButton').addEventListener('click', function() {
+        const form = document.getElementById('createCouponForm');
+        const formData = {
+            code: document.getElementById('createCode').value,
+            description: document.getElementById('createDescription').value,
+            discount_type: document.getElementById('createDiscountType').value,
+            discount_value: document.getElementById('createDiscountValue').value || null,
+            min_order_value: document.getElementById('createMinOrderValue').value || null,
+            is_active: document.getElementById('createStatus').value,
+            valid_from: document.getElementById('createValidFrom').value,
+            valid_until: document.getElementById('createValidUntil').value || null,
+            max_uses: document.getElementById('createMaxUses').value || null,
+            max_uses_per_user: document.getElementById('createMaxUsesPerUser').value || null,
+            applies_to_all: document.getElementById('createAppliesToAll').value,
+            products: document.getElementById('createProducts').value || null,
+            categories: document.getElementById('createCategories').value || null,
+            users: document.getElementById('createUsers').value || null,
+            can_stack: document.getElementById('createCanStack').value
+        };
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        fetch('hidden', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessAlert(`Coupon ${formData.code} created successfully`);
+                fetchData(1, true);
+                document.querySelector('#createCouponModal .btn-close').click();
+                form.reset();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => console.error('Error creating coupon:', error));
+    });
+
+    if (loadMoreButton) {
+        loadMoreButton.addEventListener('click', () => {
+            const nextPage = loadMoreButton.getAttribute('data-next-page');
+            fetchData(nextPage, false);
+        });
+    }
+
+    attachEventListeners();
+    attachSortListeners();
+    updateBulkActionsState();
+});
+</script>
+{% endblock content %}

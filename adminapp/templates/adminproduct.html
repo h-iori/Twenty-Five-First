@@ -1,0 +1,330 @@
+{% extends "adminbase.html" %}
+{% load static %}
+{% block title %}Admin Panel - Products{% endblock title %}
+{% block content %}
+<head>
+    <style>
+        /* [PORTFOLIO NOTE] Minimalist Admin CSS */
+        :root {
+            --bs-body-bg: #ffffff;
+            --bs-body-color: #000000;
+            --bs-border-radius: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+        .main-content {
+            padding-top: 48px;
+            transition: margin-left .3s;
+        }
+        @media (min-width: 768px) {
+            .main-content { margin-left: 240px; }
+        }
+        .card, .form-control, .btn, .table, .alert, .modal-content, .list-group-item, .dropdown-menu {
+            border-radius: 0 !important;
+            border: 1px solid #000;
+        }
+        .btn-dark { background-color: #000; color: #fff; border-color: #000; }
+        .btn-dark:hover { background-color: #333; border-color: #333; }
+        .status-pill {
+            display: inline-block;
+            padding: 0.25em 0.6em;
+            font-size: 75%;
+            font-weight: 700;
+            text-align: center;
+            border: 1px solid #000;
+            background-color: transparent;
+        }
+        .status-pill.active { background-color: #d4edda; }
+        .status-pill.inactive { background-color: #f8d7da; }
+        .product-list-thumb {
+            width: 60px !important;
+            height: 106.67px !important;
+            aspect-ratio: 9 / 16 !important;
+            object-fit: cover !important;
+            border: 1px solid #000;
+        }
+        .media-preview-item { position: relative; width: 100px; height: 100px; }
+        .media-preview-item img { width: 100%; height: 100%; object-fit: cover; border: 1px solid #000; }
+    </style>
+</head>
+
+<div class="container-fluid">
+    <div class="row">
+        <main class="main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-dark">
+                <h1 class="h2">Products</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#addShirtModal" id="addNewShirtButton">
+                        <i class="bi bi-plus-circle-fill me-1"></i> Add New Shirt
+                    </button>
+                </div>
+            </div>
+
+            <div class="alert alert-success alert-dismissible fade" role="alert" id="successAlert">
+                <div id="successMessage"></div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-warning p-0" id="lowInventoryHeader">
+                    <button class="btn btn-link-dark w-100 d-flex justify-content-between align-items-center text-decoration-none p-3" type="button" data-bs-toggle="collapse" data-bs-target="#lowInventoryCollapse">
+                        <span><i class="bi bi-exclamation-triangle-fill me-2"></i>Low Inventory Alert (Stock < 10)</span>
+                        <i class="bi bi-chevron-down collapse-icon"></i>
+                    </button>
+                </div>
+                <div class="collapse show" id="lowInventoryCollapse">
+                    <div class="card-body">
+                        <div class="table-responsive" style="max-height: 270px; overflow-y: auto;">
+                            <table class="table table-hover mb-0" id="lowInventoryTable">
+                                <thead>
+                                    <tr><th>SKU</th><th>Name</th><th>Color</th><th>Size</th><th>Stock</th><th>Action</th></tr>
+                                </thead>
+                                <tbody id="lowInventoryTableBody">
+                                    {% for variant in low_inventory_variants %}
+                                    <tr data-sku="{{ variant.sku }}">
+                                        <td>{{ variant.sku }}</td>
+                                        <td>{{ variant.color_variant.shirt.name }}</td>
+                                        <td>{{ variant.color_variant.color.name }}</td>
+                                        <td>{{ variant.size.name }}</td>
+                                        <td class="stock-quantity">{{ variant.stock }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-dark adjust-stock" data-sku="{{ variant.sku }}" data-change="10">+10</button>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="6" class="text-center">All inventory levels are healthy</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0"><i class="bi bi-funnel-fill"></i> Filters & Search</h5></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search by Name, SKU..." value="{{ search_query }}">
+                                <button class="btn btn-dark" type="button" id="searchButton">Search</button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="statusFilter">
+                                <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                        </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-table"></i> All Products</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" id="bulkActions" data-bs-toggle="dropdown" disabled>Bulk Actions</button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" data-action="true">Set to Active</a></li>
+                            <li><a class="dropdown-item" href="#" data-action="false">Set to Inactive</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" data-action="delete">Delete Selected</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="productTable">
+                            <thead id="productTableHead">
+                                <tr>
+                                    <th><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
+                                    <th>Image</th>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productTableBody">
+                                {% for shirt in page_obj %}
+                                <tr>
+                                    <td><input class="form-check-input row-checkbox" type="checkbox" value="{{ shirt.id }}"></td>
+                                    <td>
+                                        {% if shirt.primary_image_url %}
+                                            <img src="{{ shirt.primary_image_url }}" class="product-list-thumb" alt="Thumb">
+                                        {% else %}
+                                            <div class="product-list-thumb bg-light text-muted d-flex align-items-center justify-content-center">N/A</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ shirt.name }}</td>
+                                    <td>{{ shirt.s_type.name }}</td>
+                                    <td>₹{{ shirt.min_price }}</td>
+                                    <td>{{ shirt.total_stock|default:0 }}</td>
+                                    <td><span class="status-pill {{ shirt.is_active|yesno:'active,inactive' }}">{{ shirt.is_active|yesno:'Active,Inactive' }}</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-dark view-details" data-shirt-id="{{ shirt.id }}" data-bs-toggle="modal" data-bs-target="#viewShirtModal"><i class="bi bi-eye-fill"></i></button>
+                                        <button class="btn btn-sm btn-outline-dark edit-shirt" data-shirt-id="{{ shirt.id }}" data-bs-toggle="modal" data-bs-target="#addShirtModal"><i class="bi bi-pencil-fill"></i></button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="8" class="text-center">No products found</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="load-more-container" id="loadMoreContainer">
+                        {% if page_obj.has_next %}
+                        <button class="btn btn-outline-dark" id="loadMoreButton" data-next-page="{{ page_obj.next_page_number }}">Load More</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="addShirtModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addShirtModalLabel">Add New Shirt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="shirtId">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" id="shirtName" required>
+                    </div>
+                    </div>
+                <hr>
+                <h6>Color Variants</h6>
+                <div id="color-variants-container"></div>
+                <button type="button" class="btn btn-sm btn-outline-dark mt-2" id="addColorButton">Add Color</button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-dark" id="saveShirtButton">Save Shirt</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="viewShirtModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Product Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <h2 class="mb-1 fw-bold" id="detailNameDisplay"></h2>
+                <div id="variant-media-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // [SECURITY] Endpoint obfuscation
+    const API = {
+        LIST: 'hidden',
+        DETAILS: 'hidden',
+        SAVE: 'hidden',
+        UPDATE_STATUS: 'hidden',
+        BULK: 'hidden',
+        ADJUST_STOCK: 'hidden',
+        ADD_ATTRIBUTE: 'hidden',
+        DELETE_ATTRIBUTE: 'hidden'
+    };
+
+    // ... DOM Elements ...
+
+    function fetchData(page, replace = false) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', page);
+        
+        fetch(`${API.LIST}?${params}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(response => response.text())
+        .then(html => {
+            // DOM Parsing Logic
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTableBody = doc.getElementById('productTableBody').innerHTML;
+            
+            if (replace) {
+                document.getElementById('productTableBody').innerHTML = newTableBody;
+            } else {
+                document.getElementById('productTableBody').insertAdjacentHTML('beforeend', newTableBody);
+            }
+            attachEventListeners();
+        });
+    }
+
+    // Modal Logic for Dynamic Variants
+    function addNewColorSection() {
+        const colorSection = document.createElement('div');
+        colorSection.classList.add('color-section', 'mb-3');
+        // [Portfolio Note] Complex nested form generation for variants/sizes
+        colorSection.innerHTML = `
+            <div class="row">
+                <div class="col-md-3"><label class="form-label">Color</label><select class="form-select color-select"></select></div>
+                <div class="col-md-8"><input type="file" class="form-control media-input" multiple></div>
+                <div class="col-md-1"><button class="btn btn-outline-danger remove-color">X</button></div>
+            </div>
+            <div class="size-rows"></div>
+            <button class="btn btn-sm btn-outline-dark add-size">Add Size</button>
+        `;
+        document.getElementById('color-variants-container').appendChild(colorSection);
+        attachEventListenersToSection(colorSection);
+    }
+
+    // Save Product
+    document.getElementById('saveShirtButton').addEventListener('click', function () {
+        const formData = new FormData();
+        formData.append('shirt_id', document.getElementById('shirtId').value);
+        // ... append other fields ...
+        
+        // Serialize variant data
+        const colors = [];
+        document.querySelectorAll('.color-section').forEach(section => {
+            // Logic to collect sizes and media files
+        });
+        formData.append('colors', JSON.stringify(colors));
+
+        fetch(API.SAVE, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            body: formData
+        }).then(res => res.json()).then(data => {
+            if (data.success) location.reload();
+        });
+    });
+
+    // Stock Adjustment
+    function handleAdjustStock() {
+        const sku = this.getAttribute('data-sku');
+        const change = parseInt(this.getAttribute('data-change'));
+        
+        fetch(API.ADJUST_STOCK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ sku: sku, change: change })
+        }).then(res => res.json()).then(data => {
+            if (data.success) fetchData(1, true);
+        });
+    }
+
+    attachEventListeners();
+});
+</script>
+{% endblock content %}

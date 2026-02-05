@@ -1,0 +1,576 @@
+{% extends "adminbase.html" %}
+{% load static %}
+{% block title %}Admin Panel - Bulk Queries{% endblock title %}
+
+{% block content %}
+<head>
+    <style>
+        /* [PORTFOLIO NOTE] Custom Admin CSS - Minimalist & Functional */
+        :root {
+            --bs-body-bg: #ffffff;
+            --bs-body-color: #000000;
+            --bs-border-radius: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+
+        .main-content {
+            padding-top: 48px;
+            transition: margin-left .3s;
+        }
+        
+        @media (min-width: 768px) {
+            .main-content {
+                margin-left: 240px;
+            }
+        }
+        .sort-link {
+            color: #000;
+            text-decoration: none !important;
+        }
+        .sort-link:hover {
+            color: #000;
+            text-decoration: underline !important;
+        }
+        .card, .form-control, .btn, .table, .alert, .modal-content, .list-group-item, .dropdown-menu {
+            border-radius: 0 !important;
+            border: 1px solid #000;
+        }
+        
+        .btn-dark {
+            background-color: #000;
+            color: #fff;
+            border-color: #000;
+        }
+        
+        .btn-dark:hover {
+            background-color: #333;
+            border-color: #333;
+        }
+
+        .btn-outline-dark {
+            color: #000;
+            border-color: #000;
+        }
+
+        .btn-outline-dark:hover {
+            background-color: #000;
+            color: #fff;
+        }
+        
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #000;
+        }
+        
+        thead th {
+            border-bottom: 2px solid #000 !important;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.35em 0.65em;
+            font-size: .75em;
+            font-weight: 700;
+            line-height: 1;
+            color: #000;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border: 1px solid #000;
+        }
+
+        .status-badge.pending { background-color: #fff3cd; }
+        .status-badge.processing { background-color: #cce5ff; }
+        .status-badge.completed { background-color: #d4edda; }
+        .status-badge.cancelled { background-color: #f8d7da; }
+
+        .load-more-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<div class="container-fluid">
+    <div class="row">
+        <main class="main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-dark">
+                <h1 class="h2">Bulk Query Management</h1>
+            </div>
+
+            {% if messages %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                {% for message in messages %}
+                <div>{{ message }}</div>
+                {% endfor %}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endif %}
+
+            <div class="alert alert-success alert-dismissible fade" role="alert" id="successAlert">
+                <div id="successMessage"></div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-funnel-fill"></i> Filters & Search</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search by Ticket ID, Name, Email, Phone, or Message..." value="{{ search_query }}">
+                                <button class="btn btn-dark" type="button" id="searchButton"><i class="bi bi-search"></i> Search</button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="statusFilter">
+                                <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
+                                {% for status, label in status_choices %}
+                                <option value="{{ status }}" {% if status_filter == status %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="contactMethodFilter">
+                                <option value="" {% if not contact_method_filter %}selected{% endif %}>All Contact Methods</option>
+                                <option value="email" {% if contact_method_filter == 'email' %}selected{% endif %}>Email</option>
+                                <option value="phone" {% if contact_method_filter == 'phone' %}selected{% endif %}>Phone Call</option>
+                                <option value="whatsapp" {% if contact_method_filter == 'whatsapp' %}selected{% endif %}>WhatsApp</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" class="form-control" id="createdAtStartFilter" value="{{ created_at_start }}">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" class="form-control" id="createdAtEndFilter" value="{{ created_at_end }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-table"></i> Query Requests</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" id="bulkActions" data-bs-toggle="dropdown" aria-expanded="false" disabled>
+                                Bulk Actions
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="bulkActions">
+                                <li><a class="dropdown-item" href="#" data-action="PROCESSING">Change Status to Processing</a></li>
+                                <li><a class="dropdown-item" href="#" data-action="COMPLETED">Change Status to Completed</a></li>
+                                <li><a class="dropdown-item" href="#" data-action="CANCELLED">Change Status to Cancelled</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" data-action="DELETE">Delete Selected</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="queryTable">
+                            <thead>
+                                <tr>
+                                    <th><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
+                                    <th>Ticket ID</th>
+                                    <th>
+                                        <a href="#" class="sort-link" data-sort="{% if sort_by == 'full_name' %}-full_name{% else %}full_name{% endif %}">
+                                            Full Name <i class="bi bi-arrow-down-up"></i>
+                                        </a>
+                                    </th>
+                                    <th>Contact</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>
+                                        <a href="#" class="sort-link" data-sort="{% if sort_by == 'status' %}-status{% else %}status{% endif %}">
+                                            Status <i class="bi bi-arrow-down-up"></i>
+                                        </a>
+                                    </th>
+                                    <th>
+                                        <a href="#" class="sort-link" data-sort="{% if sort_by == 'created_at' %}-created_at{% else %}created_at{% endif %}">
+                                            Created At <i class="bi bi-arrow-down-up"></i>
+                                        </a>
+                                    </th>
+                                    <th>
+                                        <a href="#" class="sort-link" data-sort="{% if sort_by == 'updated_at' %}-updated_at{% else %}updated_at{% endif %}">
+                                            Updated At <i class="bi bi-arrow-down-up"></i>
+                                        </a>
+                                    </th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="queryTableBody">
+                                {% for query in page_obj %}
+                                <tr>
+                                    <td><input class="form-check-input row-checkbox" type="checkbox" value="{{ query.ticket_id }}"></td>
+                                    <td>{{ query.ticket_id }}</td>
+                                    <td>{{ query.full_name }}</td>
+                                    <td>{{ query.get_contact_method_display }}</td>
+                                    <td>{{ query.email|default:"N/A" }}</td>
+                                    <td>{{ query.phone|default:"N/A" }}</td>
+                                    <td><span class="status-badge {{ query.status|lower }}">{{ query.status }}</span></td>
+                                    <td>{{ query.created_at|date:"Y-m-d H:i:s" }}</td>
+                                    <td>{{ query.updated_at|date:"Y-m-d H:i:s" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-dark view-details" data-ticket-id="{{ query.ticket_id }}" data-bs-toggle="modal" data-bs-target="#viewDetailsModal"><i class="bi bi-eye-fill"></i></button>
+                                        <button class="btn btn-sm btn-outline-dark edit-status" data-ticket-id="{{ query.ticket_id }}" data-bs-toggle="modal" data-bs-target="#editStatusModal"><i class="bi bi-pencil-fill"></i></button>
+                                        <button class="btn btn-sm btn-outline-dark delete-ticket" data-ticket-id="{{ query.ticket_id }}"><i class="bi bi-trash-fill"></i></button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="10" class="text-center">No queries found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="load-more-container" id="loadMoreContainer">
+                        {% if page_obj.has_next %}
+                        <button class="btn btn-outline-dark" id="loadMoreButton" data-next-page="{{ page_obj.next_page_number }}">Load More</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="viewDetailsModal" tabindex="-1" aria-labelledby="viewDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewDetailsModalLabel">Ticket Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Ticket ID:</strong> <span id="detailTicketId"></span></p>
+                <p><strong>Full Name:</strong> <span id="detailFullName"></span></p>
+                <p><strong>Contact Method:</strong> <span id="detailContactMethod"></span></p>
+                <p><strong>Email:</strong> <span id="detailEmail"></span></p>
+                <p><strong>Phone:</strong> <span id="detailPhone"></span></p>
+                <p><strong>Status:</strong> <span id="detailStatus"></span></p>
+                <p><strong>Created At:</strong> <span id="detailCreatedAt"></span></p>
+                <p><strong>Updated At:</strong> <span id="detailUpdatedAt"></span></p>
+                <hr>
+                <p><strong>Message:</strong></p>
+                <p id="detailMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editStatusModal" tabindex="-1" aria-labelledby="editStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editStatusModalLabel">Edit Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editTicketId">
+                <p>Editing status for Ticket ID: <strong id="editStatusTicketIdLabel"></strong></p>
+                <div class="mb-3">
+                    <label for="statusSelect" class="form-label">New Status</label>
+                    <select class="form-select" id="statusSelect">
+                        {% for status, label in status_choices %}
+                        <option value="{{ status }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-dark" id="saveStatusButton">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // DOM Elements
+    const searchButton = document.getElementById('searchButton');
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const contactMethodFilter = document.getElementById('contactMethodFilter');
+    const createdAtStartFilter = document.getElementById('createdAtStartFilter');
+    const createdAtEndFilter = document.getElementById('createdAtEndFilter');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const bulkActionsButton = document.getElementById('bulkActions');
+    const queryTableBody = document.getElementById('queryTableBody');
+    let loadMoreButton = document.getElementById('loadMoreButton');
+    const loadMoreContainer = document.getElementById('loadMoreContainer');
+    const successAlert = document.getElementById('successAlert');
+    const successMessage = document.getElementById('successMessage');
+
+    // UI Utilities
+    function showSuccessAlert(message) {
+        successAlert.classList.remove('show', 'fade');
+        successAlert.style.display = 'block';
+        successMessage.textContent = message;
+        setTimeout(() => { successAlert.classList.add('show'); }, 10);
+        setTimeout(() => {
+            successAlert.classList.remove('show');
+            setTimeout(() => { successAlert.style.display = 'none'; }, 150);
+        }, 3000);
+    }
+
+    // Dynamic Filter State
+    function updateQueryString() {
+        const params = new URLSearchParams();
+        if (searchInput.value) params.set('search', searchInput.value);
+        if (statusFilter.value) params.set('status', statusFilter.value);
+        if (contactMethodFilter.value) params.set('contact_method', contactMethodFilter.value);
+        if (createdAtStartFilter.value) params.set('created_at_start', createdAtStartFilter.value);
+        if (createdAtEndFilter.value) params.set('created_at_end', createdAtEndFilter.value);
+        params.set('sort_by', new URLSearchParams(window.location.search).get('sort_by') || '-created_at');
+        params.set('page', 1);
+        
+        // [SECURITY] URL manipulation endpoint hidden
+        window.history.replaceState({}, '', 'hidden');
+        fetchData(1, true);
+    }
+
+    // AJAX Data Fetching
+    function fetchData(page, replace = false) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', page);
+        
+        // [SECURITY] API Endpoint Hidden
+        fetch('hidden', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const newTableBody = doc.getElementById('queryTableBody').innerHTML;
+            const newTableHead = doc.querySelector('thead').innerHTML;
+            const newLoadMoreContainer = doc.querySelector('.load-more-container');
+            
+            if (replace) {
+                queryTableBody.innerHTML = newTableBody;
+                document.querySelector('thead').innerHTML = newTableHead;
+            } else {
+                queryTableBody.insertAdjacentHTML('beforeend', newTableBody);
+            }
+            
+            loadMoreContainer.innerHTML = newLoadMoreContainer ? newLoadMoreContainer.innerHTML : '';
+            loadMoreButton = document.getElementById('loadMoreButton');
+            if (loadMoreButton) {
+                loadMoreButton.addEventListener('click', () => {
+                    const nextPage = loadMoreButton.getAttribute('data-next-page');
+                    fetchData(nextPage, false);
+                });
+            }
+            attachEventListeners();
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    }
+
+    function handleSortClick(e) {
+        e.preventDefault();
+        const sortBy = e.currentTarget.getAttribute('data-sort');
+        const params = new URLSearchParams(window.location.search);
+        params.set('sort_by', sortBy);
+        // [SECURITY] URL manipulation endpoint hidden
+        window.history.replaceState({}, '', 'hidden');
+        fetchData(1, true);
+    }
+
+    function handleSelectAll() {
+        document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateBulkActionsState();
+    }
+
+    function attachEventListeners() {
+        // [Portfolio Note] Re-attaching listeners for dynamically loaded content
+        document.querySelectorAll('.view-details').forEach(button => {
+            button.removeEventListener('click', handleViewDetails);
+            button.addEventListener('click', handleViewDetails);
+        });
+        document.querySelectorAll('.edit-status').forEach(button => {
+            button.removeEventListener('click', handleEditStatus);
+            button.addEventListener('click', handleEditStatus);
+        });
+        document.querySelectorAll('.delete-ticket').forEach(button => {
+            button.removeEventListener('click', handleDeleteTicket);
+            button.addEventListener('click', handleDeleteTicket);
+        });
+        document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+            checkbox.removeEventListener('change', updateBulkActionsState);
+            checkbox.addEventListener('change', updateBulkActionsState);
+        });
+        document.querySelectorAll('.sort-link').forEach(link => {
+            link.removeEventListener('click', handleSortClick);
+            link.addEventListener('click', handleSortClick);
+        });
+        const newSelectAll = document.getElementById('selectAllCheckbox');
+        if(newSelectAll) {
+             newSelectAll.removeEventListener('change', handleSelectAll);
+             newSelectAll.addEventListener('change', handleSelectAll);
+        }
+    }
+
+    // Modal & Action Handlers
+    function handleViewDetails() {
+        const ticketId = this.getAttribute('data-ticket-id');
+        // [SECURITY] Detail fetch endpoint hidden
+        fetch('hidden', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('detailTicketId').textContent = data.data.ticket_id;
+                document.getElementById('detailFullName').textContent = data.data.full_name;
+                document.getElementById('detailContactMethod').textContent = data.data.contact_method;
+                document.getElementById('detailEmail').textContent = data.data.email;
+                document.getElementById('detailPhone').textContent = data.data.phone;
+                document.getElementById('detailStatus').innerHTML = `<span class="status-badge ${data.data.status.toLowerCase()}">${data.data.status}</span>`;
+                document.getElementById('detailCreatedAt').textContent = data.data.created_at;
+                document.getElementById('detailUpdatedAt').textContent = data.data.updated_at;
+                document.getElementById('detailMessage').textContent = data.data.message;
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => console.error('Error fetching details:', error));
+    }
+
+    function handleEditStatus() {
+        const ticketId = this.getAttribute('data-ticket-id');
+        document.getElementById('editTicketId').value = ticketId;
+        document.getElementById('editStatusTicketIdLabel').textContent = ticketId;
+    }
+
+    function handleDeleteTicket() {
+        const ticketId = this.getAttribute('data-ticket-id');
+        if (confirm(`Are you sure you want to delete ticket ${ticketId}?`)) {
+            // [SECURITY] Delete endpoint hidden
+            fetch('hidden', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ ticket_ids: [ticketId], action: 'DELETE' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessAlert(`Ticket ${ticketId} deleted successfully`);
+                    fetchData(1, true);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error deleting ticket:', error));
+        }
+    }
+
+    function updateBulkActionsState() {
+        bulkActionsButton.disabled = !document.querySelectorAll('.row-checkbox:checked').length;
+    }
+
+    // Main Event Listeners
+    searchButton.addEventListener('click', () => updateQueryString());
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') updateQueryString();
+    });
+    statusFilter.addEventListener('change', () => updateQueryString());
+    contactMethodFilter.addEventListener('change', () => updateQueryString());
+    createdAtStartFilter.addEventListener('change', () => updateQueryString());
+    createdAtEndFilter.addEventListener('change', () => updateQueryString());
+    selectAllCheckbox.addEventListener('change', handleSelectAll);
+
+    // Bulk Action Dropdown Handler
+    document.querySelectorAll('.dropdown-item[data-action]').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const action = this.getAttribute('data-action');
+            const ticketIds = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+            const actionText = action === 'DELETE' ? 'delete' : `change status to ${action.toLowerCase()}`;
+            if (ticketIds.length && confirm(`Are you sure you want to ${actionText} ${ticketIds.length} ticket(s)?`)) {
+                // [SECURITY] Bulk action endpoint hidden
+                fetch('hidden', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ ticket_ids: ticketIds, action: action })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccessAlert(`${ticketIds.length} ticket(s) ${actionText} successfully`);
+                        fetchData(1, true);
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => console.error('Error performing bulk action:', error));
+            }
+        });
+    });
+
+    // Save Status Button Handler
+    document.getElementById('saveStatusButton').addEventListener('click', function() {
+        const ticketId = document.getElementById('editTicketId').value;
+        const newStatus = document.getElementById('statusSelect').value;
+        // [SECURITY] Status update endpoint hidden
+        fetch('hidden', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ ticket_id: ticketId, status: newStatus })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessAlert(`Status updated for ticket ${ticketId} to ${newStatus}`);
+                fetchData(1, true);
+                const modalEl = document.getElementById('editStatusModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if(modal) {
+                     modal.hide();
+                } else {
+                     document.querySelector('#editStatusModal .btn-close').click();
+                }
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => console.error('Error updating status:', error));
+    });
+
+    if (loadMoreButton) {
+        loadMoreButton.addEventListener('click', () => {
+            const nextPage = loadMoreButton.getAttribute('data-next-page');
+            fetchData(nextPage, false);
+        });
+    }
+
+    attachEventListeners();
+});
+</script>
+{% endblock content %}

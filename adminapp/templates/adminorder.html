@@ -1,0 +1,290 @@
+{% extends "adminbase.html" %}
+{% load static %}
+{% block title %}Admin Panel - Orders{% endblock title %}
+
+{% block content %}
+<head>
+    <style>
+        /* [PORTFOLIO NOTE] Minimalist Admin CSS */
+        :root {
+            --bs-body-bg: #ffffff;
+            --bs-body-color: #000000;
+            --bs-border-radius: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+        .main-content {
+            padding-top: 48px;
+            transition: margin-left .3s;
+        }
+        @media (min-width: 768px) {
+            .main-content { margin-left: 240px; }
+        }
+        .card, .form-control, .btn, .table, .alert, .modal-content, .list-group-item, .dropdown-menu {
+            border-radius: 0 !important;
+            border: 1px solid #000;
+        }
+        .btn-dark { background-color: #000; color: #fff; border-color: #000; }
+        .btn-dark:hover { background-color: #333; border-color: #333; }
+        .status-badge {
+            display: inline-block;
+            padding: 0.35em 0.65em;
+            font-size: .75em;
+            font-weight: 700;
+            border: 1px solid #000;
+        }
+        .status-badge.pending { background-color: #fff3cd; }
+        .status-badge.paid { background-color: #d4edda; }
+        .status-badge.cancelled { background-color: #f8d7da; }
+        
+        .preview-img-container { text-align: center; background-color: #f8f9fa; padding: 1rem; }
+        #previewImage { max-height: 80vh; max-width: 100%; object-fit: contain; }
+    </style>
+</head>
+
+<div class="container-fluid">
+    <div class="row">
+        <main class="main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-dark">
+                <h1 class="h2">Order Management</h1>
+            </div>
+
+            <div class="alert alert-success alert-dismissible fade" role="alert" id="successAlert">
+                <div id="successMessage"></div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0"><i class="bi bi-funnel-fill"></i> Filters & Search</h5></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search by Order #, Username..." value="{{ search_query }}">
+                                <button class="btn btn-dark" type="button" id="searchButton">Search</button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="statusFilter">
+                                <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
+                                {% for status, label in status_choices %}
+                                <option value="{{ status }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-table"></i> Orders</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" id="bulkActions" data-bs-toggle="dropdown" disabled>Bulk Actions</button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" data-action="PROCESSING">Set to Processing</a></li>
+                            <li><a class="dropdown-item" href="#" data-action="SHIPPED">Set to Shipped</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" data-action="DELETE">Delete Selected</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="orderTable">
+                            <thead>
+                                <tr>
+                                    <th><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
+                                    <th>Order #</th>
+                                    <th>User</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Payment</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orderTableBody">
+                                {% for order in page_obj %}
+                                <tr>
+                                    <td><input class="form-check-input row-checkbox" type="checkbox" value="{{ order.order_number }}"></td>
+                                    <td>{{ order.order_number }}</td>
+                                    <td>{{ order.user.username|default:"Anonymous" }}</td>
+                                    <td>₹{{ order.total_amount }}</td>
+                                    <td><span class="status-badge {{ order.status|lower }}">{{ order.status }}</span></td>
+                                    <td><span class="status-badge {{ order.payment_status|lower }}">{{ order.payment_status }}</span></td>
+                                    <td>{{ order.created_at|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-dark view-details" data-order-number="{{ order.order_number }}" data-bs-toggle="modal" data-bs-target="#viewDetailsModal"><i class="bi bi-eye-fill"></i></button>
+                                        <button class="btn btn-sm btn-outline-dark edit-status" data-order-number="{{ order.order_number }}" data-bs-toggle="modal" data-bs-target="#editStatusModal"><i class="bi bi-pencil-fill"></i></button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="9" class="text-center">No orders found</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="load-more-container" id="loadMoreContainer">
+                        {% if page_obj.has_next %}
+                        <button class="btn btn-outline-dark" id="loadMoreButton" data-next-page="{{ page_obj.next_page_number }}">Load More</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="viewDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div class="d-flex justify-content-between align-items-end mb-4 pb-3 border-bottom">
+                    <div>
+                        <h2 class="mb-1 fw-bold" id="detailOrderNumberDisplay"></h2>
+                        <div class="text-muted small">Placed on <span id="detailCreatedAt"></span></div>
+                    </div>
+                    <div class="text-end" id="detailStatus"></div>
+                </div>
+                <div class="mb-4">
+                    <h6 class="text-uppercase text-muted fw-bold small mb-2">Items</h6>
+                    <div class="table-responsive border border-black">
+                        <table class="table table-sm table-striped mb-0 align-middle">
+                            <tbody id="detailItems"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Order Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editOrderNumber">
+                <div class="mb-3">
+                    <label class="form-label">New Status</label>
+                    <select class="form-select" id="statusSelect">
+                        {% for status, label in status_choices %}
+                        <option value="{{ status }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-dark" id="saveStatusButton">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // [SECURITY] API Endpoint Obfuscation
+    const API = {
+        LIST: 'hidden',
+        DETAILS: 'hidden',
+        UPDATE: 'hidden',
+        BULK: 'hidden'
+    };
+
+    // ... DOM Elements ...
+
+    function fetchData(page, replace = false) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', page);
+        
+        fetch(`${API.LIST}?${params}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTableBody = doc.getElementById('orderTableBody').innerHTML;
+            
+            if (replace) {
+                document.getElementById('orderTableBody').innerHTML = newTableBody;
+                updateBulkActionsState();
+            } else {
+                document.getElementById('orderTableBody').insertAdjacentHTML('beforeend', newTableBody);
+            }
+            attachEventListeners();
+        });
+    }
+
+    // Modal Handling
+    function handleViewDetails() {
+        const orderNumber = this.getAttribute('data-order-number');
+        fetch(`${API.DETAILS}`.replace('0', orderNumber), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                document.getElementById('detailOrderNumberDisplay').textContent = '#' + data.data.order_number;
+                // ... Populate other fields ...
+            }
+        });
+    }
+
+    // Save Status
+    document.getElementById('saveStatusButton').addEventListener('click', function() {
+        const payload = {
+            order_number: document.getElementById('editOrderNumber').value,
+            status: document.getElementById('statusSelect').value,
+            // ... other statuses
+        };
+        
+        fetch(API.UPDATE, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Refresh and close
+                fetchData(1, true);
+            }
+        });
+    });
+
+    // Bulk Actions
+    document.querySelectorAll('.dropdown-item[data-action]').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const action = this.getAttribute('data-action');
+            const ids = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+            
+            if(ids.length && confirm(`Confirm bulk action: ${action}?`)) {
+                fetch(API.BULK, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: JSON.stringify({ order_numbers: ids, action: action })
+                }).then(() => fetchData(1, true));
+            }
+        });
+    });
+
+    attachEventListeners();
+});
+</script>
+{% endblock content %}

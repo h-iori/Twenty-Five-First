@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_styles %}
+<style>
+    main {
+        font-family: 'Roboto', sans-serif;
+        background-color: #f9f9f7;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .login-container {
+        background-color: #fff;
+        padding: 40px;
+        width: 100%;
+        max-width: 450px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .login-container h2 {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 700;
+        font-size: 28px;
+        color: #092b93;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .oauth-section {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #000000;
+        font-family: 'Garamond', serif;
+        font-size: 16px;
+        color: #1a1a1a;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #ff0000;
+        box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+    }
+
+    .custom-button {
+        width: 100%;
+        background-color: #ffffff;
+        color: #000000;
+        border: 1px solid black;
+        padding: 15px;
+        font-size: 16px;
+        font-weight: 700;
+        transition: background-color 0.3s ease;
+    }
+
+    .custom-button:hover {
+        background-color: #000000;
+        color: #ffffff;
+    }
+
+    .login-footer {
+        text-align: center;
+        margin-top: 20px;
+        font-family: 'Garamond', serif;
+        font-size: 14px;
+    }
+
+    .login-footer a {
+        color: #092b93;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .login-footer a:hover {
+        color: #d43737;
+    }
+
+    .message-container {
+        margin-bottom: 20px;
+    }
+
+    .message {
+        padding: 12px;
+        border-radius: 4px;
+        font-family: 'Garamond', serif;
+        font-size: 14px;
+        text-align: center;
+    }
+
+    .message.success {
+        background-color: #e6f4ea;
+        color: #2e7d32;
+        border: 1px solid #a5d6a7;
+    }
+
+    .message.error {
+        background-color: #ffebee;
+        color: #c62828;
+        border: 1px solid #ef9a9a;
+    }
+
+    @media (max-width: 576px) {
+        .login-container {
+            padding: 20px;
+        }
+
+        .login-container h2 {
+            font-size: 24px;
+        }
+
+        .custom-button {
+            padding: 12px;
+        }
+
+        .message {
+            font-size: 13px;
+            padding: 10px;
+        }
+    }
+</style>
+{% endblock extra_styles %}
+
+{% block title %}Login - Twenty-Five First{% endblock title %}
+
+{% block content %}
+<main>
+    <div class="login-container">
+        <h2>Login</h2>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+            </div>
+            <button type="submit" class="custom-button">Login</button>
+        </form>
+        <div class="login-footer">
+            <p>Don't have an account? <a href="{% url 'signup' %}">Sign Up</a></p>
+            <p><a href="{% url 'forget_password' %}">Forgot Password?</a></p>
+        </div>
+    </div>
+</main>
+{% endblock content %}

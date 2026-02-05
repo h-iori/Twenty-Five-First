@@ -1,0 +1,281 @@
+{% extends "adminbase.html" %}
+{% load static %}
+{% block title %}Admin Panel - Return Requests{% endblock title %}
+
+{% block content %}
+<head>
+    <style>
+        /* [PORTFOLIO NOTE] Minimalist Admin CSS */
+        :root {
+            --bs-body-bg: #ffffff;
+            --bs-body-color: #000000;
+            --bs-border-radius: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+        .main-content {
+            padding-top: 48px;
+            transition: margin-left .3s;
+        }
+        @media (min-width: 768px) {
+            .main-content { margin-left: 240px; }
+        }
+        .card, .form-control, .btn, .table, .alert, .modal-content, .list-group-item, .dropdown-menu {
+            border-radius: 0 !important;
+            border: 1px solid #000;
+        }
+        .btn-dark { background-color: #000; color: #fff; border-color: #000; }
+        .btn-dark:hover { background-color: #333; border-color: #333; }
+        .status-badge {
+            display: inline-block;
+            padding: 0.35em 0.65em;
+            font-size: .75em;
+            font-weight: 700;
+            border: 1px solid #000;
+        }
+        .status-badge.pending { background-color: #fff3cd; }
+        .status-badge.approved { background-color: #cce5ff; }
+        .status-badge.rejected { background-color: #f8d7da; }
+        .image-thumbnail {
+            width: 40px; height: 40px; object-fit: cover; border: 1px solid #000; margin-right: 5px; cursor: zoom-in;
+        }
+    </style>
+</head>
+
+<div class="container-fluid">
+    <div class="row">
+        <main class="main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-dark">
+                <h1 class="h2">Return Request Management</h1>
+            </div>
+
+            <div class="alert alert-success alert-dismissible fade" role="alert" id="successAlert">
+                <div id="successMessage"></div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0"><i class="bi bi-funnel-fill"></i> Filters & Search</h5></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search by Order #, Username, Reason..." value="{{ search_query }}">
+                                <button class="btn btn-dark" type="button" id="searchButton">Search</button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" class="form-control" id="userFilter" placeholder="Filter by User..." value="{{ user_filter }}">
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="statusFilter">
+                                <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
+                                {% for status, label in status_choices %}
+                                <option value="{{ status }}" {% if status_filter == status %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-table"></i> Return Requests</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" id="bulkActions" data-bs-toggle="dropdown" disabled>Bulk Actions</button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" data-action="APPROVED">Approve Selected</a></li>
+                            <li><a class="dropdown-item" href="#" data-action="REJECTED">Reject Selected</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" data-action="DELETE">Delete Selected</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body table-responsive">
+                    <table class="table table-hover" id="requestTable">
+                        <thead>
+                            <tr>
+                                <th><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
+                                <th>ID</th>
+                                <th>Order #</th>
+                                <th>User</th>
+                                <th>Status</th>
+                                <th>Requested At</th>
+                                <th>Images</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestTableBody">
+                            {% for request in page_obj %}
+                            <tr>
+                                <td><input class="form-check-input row-checkbox" type="checkbox" value="{{ request.id }}"></td>
+                                <td>{{ request.id }}</td>
+                                <td>{{ request.order.order_number }}</td>
+                                <td>{{ request.user.username }}</td>
+                                <td><span class="status-badge {{ request.status|lower }}">{{ request.get_status_display }}</span></td>
+                                <td>{{ request.requested_at|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    {% for image in request.images.all %}
+                                    <img src="{{ image.image.url }}" class="image-thumbnail view-image-btn" data-image-url="{{ image.image.url }}">
+                                    {% empty %}<span>None</span>{% endfor %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-dark view-details-btn" data-request-id="{{ request.id }}" data-bs-toggle="modal" data-bs-target="#viewDetailsModal"><i class="bi bi-eye-fill"></i></button>
+                                    <button class="btn btn-sm btn-outline-dark edit-status-btn" data-request-id="{{ request.id }}" data-current-status="{{ request.status }}" data-bs-toggle="modal" data-bs-target="#editStatusModal"><i class="bi bi-pencil-fill"></i></button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="8" class="text-center">No return requests found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="load-more-container" id="loadMoreContainer">
+                        {% if page_obj.has_next %}
+                        <button class="btn btn-outline-dark" id="loadMoreButton" data-next-page="{{ page_obj.next_page_number }}">Load More</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="viewDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Request Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <h2 class="mb-1 fw-bold">Request #<span id="detailRequestId"></span></h2>
+                <div id="detailReason" class="bg-light p-2 mb-3 border"></div>
+                <div id="detailImages" class="d-flex flex-wrap gap-2"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editRequestId">
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="statusSelect">
+                        {% for status, label in status_choices %}
+                        <option value="{{ status }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Admin Notes</label>
+                    <textarea id="adminNotesInput" class="form-control" rows="4"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-dark" id="saveStatusButton">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // [SECURITY] API Endpoint Obfuscation
+    const API = {
+        LIST: 'hidden',
+        DETAILS: 'hidden',
+        UPDATE: 'hidden',
+        BULK: 'hidden'
+    };
+
+    // ... DOM Elements ...
+
+    function fetchData(url, append = false) {
+        // [SECURITY] Using masked URL
+        fetch('hidden' + window.location.search, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTableBody = doc.getElementById('requestTableBody').innerHTML;
+            
+            if (append) {
+                document.getElementById('requestTableBody').insertAdjacentHTML('beforeend', newTableBody);
+            } else {
+                document.getElementById('requestTableBody').innerHTML = newTableBody;
+            }
+            attachRowEventListeners();
+        });
+    }
+
+    // View Details Logic
+    function handleViewDetails() {
+        const requestId = this.dataset.requestId;
+        // Mock detail fetch
+        fetch(`${API.DETAILS}`.replace('0', requestId), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                document.getElementById('detailRequestId').textContent = data.data.id;
+                document.getElementById('detailReason').textContent = data.data.reason;
+                // ... Populate images and other fields ...
+            }
+        });
+    }
+
+    // Save Status
+    document.getElementById('saveStatusButton').addEventListener('click', function() {
+        const payload = {
+            request_id: document.getElementById('editRequestId').value,
+            status: document.getElementById('statusSelect').value,
+            admin_notes: document.getElementById('adminNotesInput').value
+        };
+        
+        fetch(API.UPDATE, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify(payload)
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                // Close modal and refresh
+                fetchData(null, false);
+            }
+        });
+    });
+
+    // Bulk Actions
+    document.querySelectorAll('.dropdown-item[data-action]').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const action = this.dataset.action;
+            const ids = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+            
+            if(ids.length && confirm(`Confirm bulk action: ${action}?`)) {
+                fetch(API.BULK, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: JSON.stringify({ request_ids: ids, action: action })
+                }).then(() => fetchData(null, false));
+            }
+        });
+    });
+
+    attachRowEventListeners();
+});
+</script>
+{% endblock content %}

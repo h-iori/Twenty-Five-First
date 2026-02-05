@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Explore Our Shirt Collection | Formal, Casual & Luxury - Twenty-Five First{% endblock title %}
+
+{% block meta_description %}Browse the complete catalog of Twenty-Five First. From sharp formal wear to relaxed casuals and luxury party shirts. Find your perfect fit today.{% endblock meta_description %}
+
+{% block meta_keywords %}
+mens shirt collection, latest shirt designs 2026, luxury party wear shirts, smart casual shirts for men, kids formal wear, twenty-five first catalog,
+buy shirts online india, men's wardrobe essentials, trending shirt patterns, slim fit shirt collection
+{% endblock meta_keywords %}
+
+{% block og_title %}Explore the Collection - Twenty-Five First{% endblock og_title %}
+{% block og_description %}Discover our diverse range of premium shirts crafted for every occasion.{% endblock og_description %}
+{% block extra_styles %}
+<style>
+    .products-grid {
+        margin: 110px auto !important;
+    }
+
+    .text-center .custom-button {
+        padding: 15px 30px;
+        font-size: 1.2em;
+        font-family: 'Roboto', serif;
+        border-radius: 0px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .text-center .custom-button:hover {
+        background-color: white;
+        color: black;
+    }
+</style>
+{% endblock extra_styles %}
+{% block content %}
+<main>
+    <div class="jumbotron jumbotron-fluid text-center bg-light position-relative">
+        <video autoplay loop muted class="img-fluid" style="width: 100%; height: 80%; object-fit: cover;">
+            <source src="{% static 'video_asset/shirts.mp4' %}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div class="container position-absolute top-50 start-50 translate-middle" style="color: white;">
+            <h1 style="font-size:60px;">Shirts</h1>
+        </div>
+    </div>
+
+    <div class="slogan" style="margin-top:3cm; background-color: #071455; text-align: center; height:6cm; font-family: 'Roboto', serif;">
+        <h6 style="padding-top: 70px; color: gold;">Occasional Wear</h6>
+        <h3 style="color: white;">Our Luxury Collection</h3>
+    </div>
+    <div class="products-grid">
+        {% for shirt in occasional_products|slice:":8" %}
+        <a target="_blank" href="{% url 'product_detail' shirt.color_variants.first.slug %}" class="product-card">
+            {% with primary_media=shirt.color_variants.first.media.filter|first %}
+            <img src="{{ primary_media.media_file.url }}" class="product-image" alt="{{ shirt.name }}">
+            {% endwith %}
+            <div class="product-info">
+                <h3 class="product-title">{{ shirt.name }}</h3>
+                {% with first_variant=shirt.color_variants.all.0.variants.all.0 %}
+                    <p class="product-price">₹{{ first_variant.price }}</p>
+                {% endwith %}
+            </div>
+        </a>
+        {% empty %}
+        <p>No occasional wear products available at the moment.</p>
+        {% endfor %}
+    </div>
+    <div class="text-center" style="margin-top: 20px;">
+        <a href="{% url "occasional" %}">
+            <button class="btn btn-dark custom-button">Explore More</button>
+        </a>
+    </div>
+
+    <div class="slogan" style="margin-top:3cm; background-color: #071455; text-align: center; height:6cm; font-family: 'Roboto', serif;">
+        <h6 style="padding-top: 70px; color: gold;">Formal / Semi-Formal</h6>
+        <h3 style="color: white;">Our Classic Collection</h3>
+    </div>
+    <div class="products-grid">
+        {% for shirt in formal_products|slice:":8" %}
+        <a target="_blank" href="{% url 'product_detail' shirt.color_variants.first.slug %}" class="product-card">
+            {% with primary_media=shirt.color_variants.first.media.filter|first %}
+            <img src="{{ primary_media.media_file.url }}" class="product-image" alt="{{ shirt.name }}">
+            {% endwith %}
+            <div class="product-info">
+                <h3 class="product-title">{{ shirt.name }}</h3>
+                {% with first_variant=shirt.color_variants.all.0.variants.all.0 %}
+                    <p class="product-price">₹{{ first_variant.price }}</p>
+                {% endwith %}
+            </div>
+        </a>
+        {% empty %}
+        <p>No formal products available at the moment.</p>
+        {% endfor %}
+    </div>
+    <div class="text-center" style="margin-top: 20px;">
+        <a href="{% url "formal" %}">
+            <button class="btn btn-dark custom-button">Explore More</button>
+        </a>
+    </div>
+
+    <div class="slogan" style="margin-top:3cm; background-color: #071455; text-align: center; height:6cm; font-family: 'Roboto', serif;">
+        <h6 style="padding-top: 70px; color: gold;">Smart Casual</h6>
+        <h3 style="color: white;">Our Casual Collection</h3>
+    </div>
+    <div class="products-grid">
+        {% for shirt in casual_products|slice:":8" %}
+        <a target="_blank" href="{% url 'product_detail' shirt.color_variants.first.slug %}" class="product-card">
+            {% with primary_media=shirt.color_variants.first.media.filter|first %}
+            <img src="{{ primary_media.media_file.url }}" class="product-image" alt="{{ shirt.name }}">
+            {% endwith %}
+            <div class="product-info">
+                <h3 class="product-title">{{ shirt.name }}</h3>
+                {% with first_variant=shirt.color_variants.all.0.variants.all.0 %}
+                    <p class="product-price">₹{{ first_variant.price }}</p>
+                {% endwith %}
+            </div>
+        </a>
+        {% empty %}
+        <p>No casual products available at the moment.</p>
+        {% endfor %}
+    </div>
+    <div class="text-center" style="margin-top: 20px;">
+        <a href="{% url "casual" %}">
+            <button class="btn btn-dark custom-button">Explore More</button>
+        </a>
+    </div>
+
+    <div class="slogan" style="margin-top:3cm; background-color: #071455; text-align: center; height:6cm; font-family: 'Roboto', serif;">
+        <h6 style="padding-top: 70px; color: gold;">Charming Kids</h6>
+        <h3 style="color: white;">Our Kids Collection</h3>
+    </div>
+    <div class="products-grid">
+        {% for shirt in kids_products|slice:":8" %}
+        <a target="_blank" href="{% url 'product_detail' shirt.color_variants.first.slug %}" class="product-card">
+            {% with primary_media=shirt.color_variants.first.media.filter|first %}
+            <img src="{{ primary_media.media_file.url }}" class="product-image" alt="{{ shirt.name }}">
+            {% endwith %}
+            <div class="product-info">
+                <h3 class="product-title">{{ shirt.name }}</h3>
+                {% with first_variant=shirt.color_variants.all.0.variants.all.0 %}
+                    <p class="product-price">₹{{ first_variant.price }}</p>
+                {% endwith %}
+            </div>
+        </a>
+        {% empty %}
+        <p>No kids products available at the moment.</p>
+        {% endfor %}
+    </div>
+    <div class="text-center" style="margin-top: 20px;">
+        <a href="{% url "kid" %}">
+            <button class="btn btn-dark custom-button">Explore More</button>
+        </a>
+    </div>
+
+    <br><br><br>
+</main>
+{% endblock content %}
+
+{% block extra_scripts %}
+<script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+        {
+            "@type": "CollectionPage",
+            "@id": "{{ request.scheme }}://{{ request.get_host }}{% url 'explore' %}",
+            "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'explore' %}",
+            "name": "Explore Our Shirt Collection - Twenty-Five First",
+            "description": "Browse our complete range of formal, casual, occasional, and kids shirts.",
+            "hasPart": [
+                {
+                    "@type": "CollectionPage",
+                    "name": "Occasional Wear",
+                    "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'occasional' %}"
+                },
+                {
+                    "@type": "CollectionPage",
+                    "name": "Formal Collection",
+                    "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'formal' %}"
+                },
+                {
+                    "@type": "CollectionPage",
+                    "name": "Casual Collection",
+                    "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'casual' %}"
+                },
+                {
+                    "@type": "CollectionPage",
+                    "name": "Kids Collection",
+                    "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'kid' %}"
+                }
+            ]
+        },
+        {
+            "@type": "BreadcrumbList",
+            "itemListElement": [{
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'home' %}"
+            }, {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Explore Collection",
+                "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'explore' %}"
+            }]
+        }]
+    }
+</script>
+{% endblock extra_scripts %}

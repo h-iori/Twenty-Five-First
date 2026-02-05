@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load static %}
+{% block extra_styles %}
+<style>
+    main {
+        font-family: 'Roboto', sans-serif;
+        background-color: #f9f9f7;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .signup-container {
+        background-color: #fff;
+        padding: 40px;
+        width: 100%;
+        max-width: 450px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .signup-container h2 {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 700;
+        font-size: 28px;
+        color: #092b93;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #092b93;
+        font-family: 'Garamond', serif;
+        font-size: 16px;
+        color: #1a1a1a;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #ff1e00;
+        box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+    }
+
+    .custom-button {
+        width: 100%;
+        background-color: #ffffff;
+        color: #000000;
+        border: 1px solid black;
+        padding: 15px;
+        font-size: 16px;
+        font-weight: 700;
+        transition: background-color 0.3s ease;
+    }
+
+    .custom-button:hover {
+        background-color: #000000;
+        color: #ffffff;
+    }
+
+    .signup-footer {
+        text-align: center;
+        margin-top: 20px;
+        font-family: 'Garamond', serif;
+        font-size: 14px;
+    }
+
+    .signup-footer a {
+        color: #092b93;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .signup-footer a:hover {
+        color: #ff1111;
+    }
+
+    @media (max-width: 576px) {
+        .signup-container {
+            padding: 20px;
+        }
+
+        .signup-container h2 {
+            font-size: 24px;
+        }
+
+        .custom-button {
+            padding: 12px;
+        }
+    }
+</style>
+{% endblock extra_styles %}
+
+{% block title %}Sign Up - Twenty-Five First{% endblock title %}
+
+{% block content %}
+<main>
+    <div class="signup-container mt-5">
+        <h2>Sign Up</h2>
+        <form method="POST" action="{% url 'signup' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <input type="text" class="form-control" id="first_name" name="first_name" placeholder="First Name" required>
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" id="last_name" name="last_name" placeholder="Last Name" required>
+            </div>
+            <div class="form-group">
+                <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+            </div>
+            <div class="form-group">
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Confirm Password" required>
+            </div>
+            <div class="form-group">
+                <div class="g-recaptcha" data-sitekey="{{ recaptcha_public_key }}"></div>
+            </div>
+            <button type="submit" class="custom-button">Sign Up</button>
+        </form>
+        <div class="signup-footer">
+            <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+        </div>
+    </div>
+</main>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endblock content %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}About Twenty-Five First | Redefining Men's Fashion & Quality{% endblock title %}
+
+{% block meta_description %}Discover the story of Twenty-Five First (Est. 2025). We craft luxury men's shirts using the finest Egyptian cotton & Merino wool. Experience timeless style.{% endblock meta_description %}
+
+{% block meta_keywords %}
+about twenty five first, mens fashion brand story, luxury mens shirts, egyptian cotton shirts, merino wool shirts, quality craftsmanship,
+luxury shirts under 1000, best shirt brand in india, premium cotton shirts price, affordable luxury mens wear, authentic shirt manufacturers
+{% endblock meta_keywords %}
+
+{% block extra_styles %}
+<style>
+    main {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 100;
+    }
+
+    @media (max-width: 767px) {
+        h1 {
+            font-size: 24px;
+        }
+
+        h2 {
+            font-size: 20px;
+        }
+
+        p {
+            font-size: 14px;
+        }
+
+        .jumbotron h1 {
+            font-size: 28px;
+        }
+    }
+</style>
+{% endblock extra_styles %}
+
+{% block content %}
+<main>
+    <div class="jumbotron jumbotron-fluid text-center bg-dark position-relative">
+        <video autoplay loop muted class="img-fluid" style="width: 100%; max-width: 100%; height: auto;">
+            <source src="{% static 'video_asset/vd3ok.mp4' %}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div class="container position-absolute top-50 start-50 translate-middle" style="color: white;">
+            <h1 class="display-4">#KnowUs</h1>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <div class="row align-items-center">
+            <div class="col-12 col-lg-6 order-2 order-lg-1">
+                <h2 class="mb-4"><b><i>Our Story</i></b></h2>
+                <p><u>Twenty-Five First</u> began with a fervent commitment to crafting enduring, high-quality shirts. Our journey revolves around offering luxury through simplicity, reshaping contemporary fashion paradigms.</p>
+                <p>With unwavering dedication and innovative strides, we continually redefine the industry landscape, epitomizing elegance and sophistication in every fabric weave and design.</p>
+            </div>
+            <div class="col-12 col-lg-6 order-1 order-lg-2">
+                <img src="{% static 'img_asset/about1.webp' %}" class="img-fluid" alt="Twenty-Five First Story Image">
+            </div>
+        </div>
+
+        <hr class="my-5">
+
+        <div class="row align-items-center">
+            <div class="col-12 col-lg-6">
+                <video autoplay loop muted class="img-fluid" style="width: 100%; max-width: 100%; height: auto;">
+                    <source src="{% static 'video_asset/vid2.mp4' %}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            <div class="col-12 col-lg-6">
+                <h2 class="mb-4"><b><i>Finest Materials</i></b></h2>
+                <p><u>Twenty-Five First</u> prides itself on meticulously handpicking premium fabrics renowned for their unparalleled comfort, longevity, and style.</p>
+                <p>From sumptuous Egyptian cottons to intricately textured merino wools, each garment embodies our unwavering dedication to quality craftsmanship, ensuring a harmonious fusion of luxury and durability for the discerning individual.</p>
+            </div>
+        </div>
+
+        <hr class="my-5">
+
+        <div class="row align-items-center">
+            <div class="col-12 col-lg-6 order-2 order-lg-1">
+                <h2 class="mb-4"><b><i>Our Mission</i></b></h2>
+                <p>At <u>Twenty-Five First</u>, our mission transcends mere apparel; we champion individuality, confidence, and self-expression. Through meticulously curated essentials, we empower individuals to embrace their distinct style, fostering a community where every garment tells a unique story.</p>
+                <p>With every stitch, we strive to redefine modern elegance, inspiring a legacy of timeless sophistication.</p>
+            </div>
+            <div class="col-12 col-lg-6 order-1 order-lg-2">
+                <video autoplay loop muted playsinline class="img-fluid" style="width: 100%; max-width: 100%; height: auto;">
+                    <source src="{% static 'video_asset/vd1.mp4' %}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+{% block extra_scripts %}
+<script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "AboutPage",
+        "mainEntity": {
+            "@type": "Organization",
+            "name": "Twenty-Five First",
+            "foundingDate": "2025",
+            "description": "Crafting enduring, high-quality shirts offering luxury through simplicity.",
+            "logo": "{{ request.scheme }}://{{ request.get_host }}{% static 'img_asset/logo.webp' %}"
+        }
+    }
+</script>
+{% endblock extra_scripts %}

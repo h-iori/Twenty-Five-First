@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_styles %}
+<style>
+    main {
+        margin-top: 80px;
+    }
+
+    .popup-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .popup-content {
+        background-color: #fff;
+        padding: 20px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .popup-content h3 {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 700;
+        font-size: 20px;
+        color: rgb(0, 0, 0);
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .popup-content p {
+        font-family: 'Garamond', serif;
+        font-size: 16px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+
+    @media (max-width: 576px) {
+        .popup-content {
+            padding: 15px;
+            max-width: 90%;
+        }
+
+    }
+</style>
+{% endblock extra_styles %}
+{% block title %}Wishlist - Twenty-Five First{% endblock %}
+
+{% block content %}
+<main>
+    <div class="container my-5">
+        <h2 class="mb-4">Wishlist</h2>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="list-group" style="top: 20px; margin-bottom: 20px;">
+                    <a href="{% url 'user_dashboard' %}" class="list-group-item list-group-item-action">Dashboard</a>
+                    <a href="{% url 'user_orders' %}" class="list-group-item list-group-item-action">My Orders</a>
+                    <a href="{% url 'wishlist' %}" class="list-group-item list-group-item-action active">Wishlist</a>
+                    <a href="{% url 'addresses' %}" class="list-group-item list-group-item-action">Address Book</a>
+                    <a href="{% url 'account_settings' %}" class="list-group-item list-group-item-action">Account Settings</a>
+                    <a href="{% url 'reviews' %}" class="list-group-item list-group-item-action">Reviews</a>
+                    <a href="{% url 'support' %}" class="list-group-item list-group-item-action">Support</a>
+                    <a href="#" class="list-group-item list-group-item-action text-danger" id="logoutLink">Logout</a>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-body">
+                        {% for item in wishlist %}
+                        <div class="d-flex mb-3 border-bottom pb-3 wishlist-item" data-variant-id="{{ item.variant.id }}">
+                            {% with primary_media=item.variant.color_variant.media.filter|first %}
+                            <img src="{{ primary_media.media_file.url }}" alt="{{ item.variant.color_variant.shirt.name }}" class="cart-item-img">
+                            {% endwith %}
+                            <div class="ms-3 flex-grow-1">
+                                <h5>{{ item.variant.color_variant.shirt.name }}</h5>
+                                <p>₹{{ item.variant.price }}</p>
+                                <a href="{% url 'product_detail' item.variant.color_variant.slug %}" class="btn btn-outline-dark" style="border-radius:0px;">View Product</a>
+                                <a href="#" class="btn btn-outline-danger remove-wishlist-item" style="border-radius:0px;" data-variant-id="{{ item.variant.id }}">Remove</a>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p id="empty-wishlist-message">Your wishlist is empty.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="popup-overlay" id="logoutPopup">
+        <div class="popup-content">
+            <h3>Confirm Logout</h3>
+            <p>Oh no! You are Logging Out.... Are You Sure?</p>
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-outline-dark btn-sm" style="border-radius: 0px;" id="cancelLogout">Nah, Just Kidding</button>
+                <form method="POST" action="{% url 'logout_all' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger btn-sm" style="border-radius: 0px;">Yes, Log Me Out</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const logoutLink = document.getElementById('logoutLink');
+        const logoutPopup = document.getElementById('logoutPopup');
+        const confirmLogout = document.getElementById('confirmLogout');
+        const cancelLogout = document.getElementById('cancelLogout');
+
+        logoutLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            logoutPopup.style.display = 'flex';
+        });
+
+        cancelLogout.addEventListener('click', function() {
+            logoutPopup.style.display = 'none';
+        });
+
+        confirmLogout.addEventListener('click', function() {
+            fetch("{% url 'logout_all' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        showGlobalAlert('An error occurred. Please try again.', 'error');
+                    }
+                })
+                .catch(error => {
+                    showGlobalAlert('An error occurred. Please try again.', 'error');
+                });
+        });
+    });
+</script>
+{% endblock %}
+
+{% block extra_scripts%}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $(document).on('click', '.remove-wishlist-item', function(e) {
+            e.preventDefault();
+
+            const $button = $(this);
+            const variantId = $button.data('variant-id');
+            const $item = $('.wishlist-item[data-variant-id="' + variantId + '"]');
+            const $container = $('#wishlist-container');
+
+            if (!$item.length) {
+                showGlobalAlert('Error: Item not found on page. Please refresh and try again.', 'error');
+                return;
+            }
+
+            const csrftoken = getCookie('csrftoken');
+            if (!csrftoken) {
+                showGlobalAlert('Session issue detected. Please refresh the page and try again.', 'error');
+                return;
+            }
+
+            $.ajax({
+                url: `/wishlist/remove/${variantId}/`,
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        $item.fadeOut(300, function() {
+                            $(this).remove();
+                            if ($container.find('.wishlist-item').length === 0) {
+                                $container.html('<p id="empty-wishlist-message">Your wishlist is empty.</p>');
+                            }
+                        });
+                        showGlobalAlert('Item removal successful', 'success');
+                    } else {
+                        showGlobalAlert(response.error || 'An error occurred while removing the item.', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showGlobalAlert('Failed to remove item. Please try again.', 'error');
+                }
+            });
+        });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock extra_scripts%}

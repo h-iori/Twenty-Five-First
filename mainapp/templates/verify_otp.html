@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_styles %}
+<style>
+    main {
+        font-family: 'Roboto', sans-serif;
+        background-color: #f9f9f7;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .otp-container {
+        background-color: #fff;
+        padding: 40px;
+        width: 100%;
+        max-width: 450px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .otp-container h2 {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 700;
+        font-size: 28px;
+        color: #092b93;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #092b93;
+        font-family: 'Garamond', serif;
+        font-size: 16px;
+        color: #1a1a1a;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #ff1e00;
+        box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+    }
+
+    .custom-button {
+        width: 100%;
+        background-color: #ffffff;
+        color: #000000;
+        border: 1px solid black;
+        padding: 15px;
+        font-size: 16px;
+        font-weight: 700;
+        transition: background-color 0.3s ease;
+    }
+
+    .custom-button:hover {
+        background-color: #000000;
+        color: #ffffff;
+    }
+
+    .otp-footer {
+        text-align: center;
+        margin-top: 20px;
+        font-family: 'Garamond', serif;
+        font-size: 14px;
+    }
+
+    .otp-footer a {
+        color: #092b93;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .otp-footer a:hover {
+        color: #ff1111;
+    }
+
+    .resend-btn {
+        background: none;
+        border: none;
+        color: #007bff;
+        text-decoration: underline;
+        cursor: pointer;
+        padding: 0;
+        font-size: 14px;
+    }
+
+    .resend-btn:hover {
+        color: #0056b3;
+    }
+
+    .resend-btn:disabled {
+        color: #6c757d;
+        cursor: not-allowed;
+    }
+
+    #resend-timer {
+        font-size: 14px;
+        color: #6c757d;
+        margin-left: 10px;
+    }
+
+    @media (max-width: 576px) {
+        .otp-container {
+            padding: 20px;
+        }
+
+        .otp-container h2 {
+            font-size: 24px;
+        }
+
+        .custom-button {
+            padding: 12px;
+        }
+    }
+</style>
+{% endblock extra_styles %}
+
+{% block title %}Verify OTP - Twenty-Five First{% endblock title %}
+
+{% block content %}
+<main>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h2 class="card-title text-center mb-4">Verify Your Email</h2>
+                        <p class="text-center text-muted mb-4">We've sent a 6-digit code to <strong>{{ email }}</strong></p>
+
+                        <form method="post" id="otp-form">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="otp">Enter OTP</label>
+                                <input type="text" class="form-control" id="otp" name="otp" maxlength="6" pattern="[0-9]{6}" required autofocus>
+                            </div>
+                            <button type="submit" class="btn custom-button">Verify OTP</button>
+                        </form>
+
+                        <div class="text-center mt-3">
+                            <span>Didn't receive OTP?</span>
+                            <button type="button" id="resend-btn" class="resend-btn" onclick="resendOTP()">Resend</button>
+                            <span id="resend-timer"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    let resendTimeout = null;
+    let countdownInterval = null;
+
+    function resendOTP() {
+        const btn = document.getElementById('resend-btn');
+        const timer = document.getElementById('resend-timer');
+
+        btn.disabled = true;
+
+        fetch("{% url 'resend_otp' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `email={{ email }}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('OTP resent successfully! Please check your email.');
+                    startResendCooldown();
+                } else {
+                    alert(data.error || 'Failed to resend OTP. Please try again.');
+                    btn.disabled = false;
+                }
+            })
+            .catch(error => {
+                alert('Network error. Please try again.');
+                btn.disabled = false;
+            });
+    }
+
+    function startResendCooldown() {
+        const btn = document.getElementById('resend-btn');
+        const timer = document.getElementById('resend-timer');
+        let seconds = 60;
+
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+        }
+
+        timer.textContent = `(${seconds}s)`;
+
+        countdownInterval = setInterval(() => {
+            seconds--;
+            if (seconds > 0) {
+                timer.textContent = `(${seconds}s)`;
+            } else {
+                clearInterval(countdownInterval);
+                timer.textContent = '';
+                btn.disabled = false;
+            }
+        }, 1000);
+    }
+
+    document.getElementById('otp').addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+
+    document.getElementById('otp-form').addEventListener('submit', function(e) {
+        const otp = document.getElementById('otp').value;
+        if (otp.length !== 6 || !/^\d+$/.test(otp)) {
+            e.preventDefault();
+            alert('Please enter a valid 6-digit OTP.');
+        }
+    });
+</script>
+{% endblock content %}

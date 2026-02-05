@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Premium Men's Shirts Online | Formal, Casual - Twenty-Five First{% endblock title %}
+
+{% block meta_description %}Upgrade your style with Twenty-Five First. Shop premium formal, casual, and party wear shirts for men. Crafted for comfort & elegance. Buy online today!{% endblock meta_description %}
+
+{% block meta_keywords %}
+buy mens shirts online, premium formal shirts, casual shirts for men, party wear shirts india, luxury mens fashion, twenty-five first, stylish mens clothing,
+mens shirts under 1000, best men shirt under 800, formal shirts under 1500, casual shirts price list, premium shirts under 1200
+{% endblock meta_keywords %}
+
+{% block og_title %}Twenty-Five First - Redefining Men's Fashion{% endblock og_title %}
+{% block og_description %}Discover our latest collection of premium shirts. Crafted with precision for the modern man.{% endblock og_description %}
+{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img_asset/model2.webp' %}{% endblock og_image %}
+{% block extra_styles %}
+<style>
+    @media (max-width: 767px) {
+        h1 {
+            font-size: 24px;
+        }
+
+        .carousel-caption h5 {
+            font-size: 18px;
+        }
+
+        .carousel-caption p {
+            font-size: 14px;
+        }
+
+        .slogan h3 {
+            font-size: 20px;
+        }
+
+        .slogan h6 {
+            font-size: 14px;
+        }
+
+        .itemx img {
+            max-width: 60%;
+        }
+
+        .itemx p {
+            font-size: 14px;
+        }
+    }
+
+    .containerx {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        margin: 20px 0;
+    }
+
+    .itemx {
+        text-align: center;
+        flex: 1 1 30%;
+        margin: 10px;
+    }
+
+    .itemx img {
+        width: 150px;
+        height: auto;
+        max-width: 100%;
+        transition: transform 0.3s ease;
+    }
+
+    .itemx img:hover {
+        transform: scale(1.05);
+    }
+
+    .itemx p {
+        margin-top: 10px;
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    @media (max-width: 991px) {
+        .itemx {
+            flex: 1 1 45%;
+        }
+
+        .itemx img {
+            width: 150px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .itemx {
+            flex: 1 1 100%;
+        }
+
+        .itemx img {
+            width: 120px;
+        }
+    }
+</style>
+{% endblock extra_styles %}
+
+{% block content %}
+<main>
+    <section id="carousel" class="carousel">
+        <div id="carouselExampleCaptions" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2" aria-label="Slide 3"></button>
+            </div>
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <img src="{% static 'img_asset/model2.webp' %}" class="d-block w-100" alt="Men's Premium Shirt Collection" style="width: 100%; height: auto;">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Our Latest Product</h5>
+                        <p>For the men who wants to stand out</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="{% static 'img_asset/sunglass.webp' %}" class="d-block w-100" alt="Men's Formal Shirt Collection" style="width: 100%; height: auto;">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Second slide label</h5>
+                        <p>Some representative placeholder content for the second slide.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="{% static 'img_asset/grey.webp' %}" class="d-block w-100" alt="Men's Casual Shirt Collection" style="width: 100%; height: auto;">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h5>Third slide label</h5>
+                        <p>Some representative placeholder content for the third slide.</p>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+    </section>
+
+    <h1 align="center" style="color: black; margin-top: 40px; margin-bottom: 40px;">Our Collection</h1>
+
+    <div class="container">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+            <div class="col">
+                <a href="{% url "explore" %}" target="_blank">
+                    <div class="image-card">
+                        <img src="{% static "img_asset/casual.jpg" %}" alt="Twenty-Five First Shirt Collection">
+                        <div class="img-name">Explore</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col">
+                <a href="{% url "formal" %}" target="_blank">
+                    <div class="image-cardb">
+                        <img src="{% static "img_asset/frml.jpg" %}" alt="Twenty-Five First Formal Shirts">
+                        <div class="img-name">Formals</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col">
+                <a href="{% url "casual" %}" target="_blank">
+                    <div class="image-cardb">
+                        <img src="{% static "img_asset/oc.jpg" %}" alt="Twenty-Five First Casual Shirts">
+                        <div class="img-name">Casuals</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col">
+                <a href="{% url "occasional" %}" target="_blank">
+                    <div class="image-card">
+                        <img src="{% static "img_asset/exp.jpg" %}" alt="Twenty-Five First Party-Wear Shirts">
+                        <div class="img-name">Occasionals</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <h1 align="center" style="color: black; margin-top: 40px; margin-bottom: 40px;">New Arrivals</h1>
+    <div class="products-grid">
+        {% for shirt in new_arrivals|slice:":6" %}
+        <a target="_blank" href="{% url 'product_detail' shirt.color_variants.first.slug %}" class="product-card">
+            {% with primary_media=shirt.color_variants.first.media.filter|first %}
+            <img src="{{ primary_media.media_file.url }}" class="product-image" alt="{{ shirt.name }}">
+            {% endwith %}
+            <div class="product-info">
+                <h3 class="product-title">{{ shirt.name }}</h3>
+                {% with first_variant=shirt.color_variants.all.0.variants.all.0 %}
+                    <p class="product-price">₹{{ first_variant.price }}</p>
+                {% endwith %}
+            </div>
+        </a>
+        {% empty %}
+        <p>No new arrivals available at the moment.</p>
+        {% endfor %}
+    </div>
+
+    <div class="containerx">
+        <div class="itemx">
+            <img src="{% static 'img_asset/clt1.webp' %}" alt="Thoughtful Essentials">
+            <p>Thoughtful Essentials</p>
+        </div>
+        <div class="itemx">
+            <img src="{% static 'img_asset/clt2.webp' %}" alt="Daily Wear Items">
+            <p>Daily Wear Items</p>
+        </div>
+        <div class="itemx">
+            <img src="{% static 'img_asset/clt3.webp' %}" alt="Versatility Over Volume">
+            <p>Versatility Over Volume</p>
+        </div>
+    </div>
+    <div class="slogan" style="background-color: #071455; text-align: center; padding: 40px 20px;">
+        <h3 style="font-size: 24px; color: gold;">"Trends fade. Style is eternal."</h3>
+        <h6 style="color: white;">– Coco Chanel</h6>
+    </div>
+
+    <h1 align="center" style="color: black; margin-top: 40px; margin-bottom: 40px;">More From Us</h1>
+
+    <div class="products-grid">
+        {% for shirt in more_products|slice:":6" %}
+        <a target="_blank" href="{% url 'product_detail' shirt.color_variants.first.slug %}" class="product-card">
+            {% with primary_media=shirt.color_variants.first.media.filter|first %}
+            <img src="{{ primary_media.media_file.url }}" class="product-image" alt="{{ shirt.name }}">
+            {% endwith %}
+            <div class="product-info">
+                <h3 class="product-title">{{ shirt.name }}</h3>
+                {% with first_variant=shirt.color_variants.all.0.variants.all.0 %}
+                    <p class="product-price">₹{{ first_variant.price }}</p>
+                {% endwith %}
+            </div>
+        </a>
+        {% empty %}
+        <p>No products available at the moment.</p>
+        {% endfor %}
+    </div>
+
+    <div id="wholesaleModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal" aria-label="Close Modal">×</button>
+            <h2 style="font-weight: 400 !important;">Exclusive Offer for <strong><u>Wholesale Customers</u></strong></h2>
+            <p>Scale your business with Twenty-Five First! We provide premium shirts for bulk orders, ideal for retailers and large purchases.</p>
+            <p class="discount-highlight">Get a <strong>Significant Discount</strong> on Bulk Orders!</p>
+            <a href="{% url "bulk_order" %}" class="modal-button">Start your order now</a>
+        </div>
+    </div>
+</main>
+<br>
+<br>
+<br>
+</main>
+{% endblock content %}
+
+{% block extra_scripts %}
+<script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Twenty-Five First",
+        "url": "{{ request.build_absolute_uri }}",
+        "logo": "{{ request.scheme }}://{{ request.get_host }}{% static 'img_asset/logo.webp' %}",
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+91-9702383848",
+            "contactType": "customer service",
+            "areaServed": "IN",
+            "availableLanguage": "en"
+        },
+        "sameAs": [
+            "https://facebook.com/twentyfivefirst",
+            "https://instagram.com/twentyfivefirst"
+        ]
+    }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().toDateString();
+        let lastShown = localStorage.getItem('modalLastShown');
+
+        if (lastShown !== today) {
+            setTimeout(function() {
+                document.getElementById('wholesaleModal').style.display = 'flex';
+            }, 5000);
+
+            localStorage.setItem('modalLastShown', today);
+        }
+
+        const closeModal = document.querySelector('.close-modal');
+        const modal = document.getElementById('wholesaleModal');
+
+        closeModal.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock extra_scripts %}

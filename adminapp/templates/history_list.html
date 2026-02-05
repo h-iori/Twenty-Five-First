@@ -1,0 +1,205 @@
+{% extends "adminbase.html" %}
+{% load static %}
+{% block title %}Admin Panel - Browsing History{% endblock title %}
+
+{% block content %}
+<head>
+    <style>
+        /* [PORTFOLIO NOTE] Minimalist Admin CSS */
+        :root {
+            --bs-body-bg: #ffffff;
+            --bs-body-color: #000000;
+            --bs-border-radius: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+        /* ... Utility classes ... */
+        .card, .form-control, .btn, .table, .alert, .modal-content, .list-group-item, .dropdown-menu {
+            border-radius: 0 !important;
+            border: 1px solid #000;
+        }
+        .btn-dark { background-color: #000; color: #fff; border-color: #000; }
+        .btn-dark:hover { background-color: #333; border-color: #333; }
+        .product-thumb-portrait {
+            width: 45px;
+            aspect-ratio: 9 / 16;
+            object-fit: cover;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+
+<div class="container-fluid">
+    <div class="row">
+        <main class="main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-dark">
+                <h1 class="h2">Browsing History Management</h1>
+            </div>
+
+            <div class="alert alert-success alert-dismissible fade" role="alert" id="successAlert">
+                <div id="successMessage"></div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0"><i class="bi bi-funnel-fill"></i> Filters & Search</h5></div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search by Username..." value="{{ search_query }}">
+                                <button class="btn btn-dark" type="button" id="searchButton"><i class="bi bi-search"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-table"></i> Browsing History</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" id="bulkActions" data-bs-toggle="dropdown" disabled>Bulk Actions</button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item text-danger" href="#" data-action="DELETE">Delete Selected</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
+                                    <th>Image</th>
+                                    <th>Username</th>
+                                    <th>Product</th>
+                                    <th>Viewed At</th>
+                                    <th>View Count</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                {% for item in page_obj %}
+                                <tr>
+                                    <td><input class="form-check-input row-checkbox" type="checkbox" value="{{ item.id }}"></td>
+                                    <td>
+                                        {% with primary_image=item.variant.color_variant.cached_primary_media.0 %}
+                                            {% if primary_image and primary_image.media_file %}
+                                                <img src="{{ primary_image.media_file.url }}" class="product-thumb-portrait">
+                                            {% else %}
+                                                <div class="product-thumb-portrait d-flex align-items-center justify-content-center text-muted small">N/A</div>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>{{ item.user.username }}</td>
+                                    <td>
+                                        <div>{{ item.variant.color_variant.shirt.name }}</div>
+                                        <small class="text-muted">{{ item.variant.color_variant.color.name }} | Size: {{ item.variant.size.name }}</small>
+                                    </td>
+                                    <td>{{ item.viewed_at|date:"Y-m-d H:i" }}</td>
+                                    <td>{{ item.view_count }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-dark delete-history" data-history-id="{{ item.id }}"><i class="bi bi-trash-fill"></i></button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="7" class="text-center">No browsing history found</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="load-more-container" id="loadMoreContainer">
+                        {% if page_obj.has_next %}
+                        <button class="btn btn-outline-dark" id="loadMoreButton" data-next-page="{{ page_obj.next_page_number }}">Load More</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // [SECURITY] API Endpoint Obfuscation
+    const API = {
+        LIST: 'hidden',
+        BULK: 'hidden'
+    };
+
+    // ... DOM Elements ...
+
+    function fetchData(page, replace = false) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', page);
+        
+        fetch(`${API.LIST}?${params}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTableBody = doc.getElementById('historyTableBody').innerHTML;
+            
+            if (replace) {
+                document.getElementById('historyTableBody').innerHTML = newTableBody;
+            } else {
+                document.getElementById('historyTableBody').insertAdjacentHTML('beforeend', newTableBody);
+            }
+            attachTableEventListeners();
+        });
+    }
+
+    // Bulk Delete Logic
+    function handleBulkAction(e) {
+        e.preventDefault();
+        const action = this.getAttribute('data-action');
+        const ids = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+        
+        if (ids.length && confirm(`Delete ${ids.length} history items?`)) {
+            fetch(API.BULK, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ history_ids: ids, action: action })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) fetchData(1, true);
+            });
+        }
+    }
+
+    // Single Delete
+    function handleDeleteHistory() {
+        const id = this.getAttribute('data-history-id');
+        if (confirm(`Delete history item ${id}?`)) {
+            fetch(API.BULK, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ history_ids: [id], action: 'DELETE' })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) fetchData(1, true);
+            });
+        }
+    }
+
+    // Event Listeners
+    document.getElementById('searchButton').addEventListener('click', () => {
+        const params = new URLSearchParams(window.location.search);
+        params.set('search', document.getElementById('searchInput').value);
+        params.set('page', 1);
+        window.history.replaceState({}, '', `hidden?${params}`);
+        fetchData(1, true);
+    });
+
+    attachTableEventListeners();
+});
+</script>
+{% endblock content %}

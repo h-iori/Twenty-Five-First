@@ -1,0 +1,268 @@
+{% extends "adminbase.html" %}
+{% load static %}
+{% block title %}Admin Panel - Invoices{% endblock title %}
+
+{% block content %}
+<head>
+    <style>
+        /* [PORTFOLIO NOTE] Minimalist Admin CSS */
+        :root {
+            --bs-body-bg: #ffffff;
+            --bs-body-color: #000000;
+            --bs-border-radius: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+        .main-content {
+            padding-top: 48px;
+            transition: margin-left .3s;
+        }
+        @media (min-width: 768px) {
+            .main-content { margin-left: 240px; }
+        }
+        .card, .form-control, .btn, .table, .alert, .modal-content, .list-group-item, .dropdown-menu {
+            border-radius: 0 !important;
+            border: 1px solid #000;
+        }
+        .btn-dark { background-color: #000; color: #fff; border-color: #000; }
+        .btn-dark:hover { background-color: #333; border-color: #333; }
+        .status-badge {
+            display: inline-block;
+            padding: 0.35em 0.65em;
+            font-size: .75em;
+            font-weight: 700;
+            border: 1px solid #000;
+        }
+        .status-badge.pending { background-color: #fff3cd; }
+        .status-badge.paid { background-color: #d4edda; }
+        .invoice-table th { background-color: #f8f9fa; font-weight: 700; }
+    </style>
+</head>
+
+<div class="container-fluid">
+    <div class="row">
+        <main class="main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-dark">
+                <h1 class="h2">Invoice Management</h1>
+            </div>
+
+            <div class="alert alert-success alert-dismissible fade" role="alert" id="successAlert">
+                <div id="successMessage"></div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0"><i class="bi bi-funnel-fill"></i> Filters & Search</h5></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search by Invoice #, Order #..." value="{{ search_query }}">
+                                <button class="btn btn-dark" type="button" id="searchButton">Search</button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="statusFilter">
+                                <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
+                                {% for status, label in status_choices %}
+                                <option value="{{ status }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-table"></i> Invoices</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="dropdown me-2">
+                            <button class="btn btn-sm btn-dark dropdown-toggle" type="button" id="exportActions" data-bs-toggle="dropdown">
+                                <i class="bi bi-file-earmark-arrow-down-fill"></i> Export
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" data-action="export-current">Export Current View (CSV)</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#customDateExportModal">Custom Range...</a></li>
+                            </ul>
+                        </div>
+                        
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" id="bulkActions" data-bs-toggle="dropdown" disabled>Bulk Actions</button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item text-danger" href="#" data-action="DELETE">Delete Selected</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="invoiceTable">
+                            <thead id="invoiceTableHead">
+                                <tr>
+                                    <th><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
+                                    <th>Invoice #</th>
+                                    <th>Order #</th>
+                                    <th>Recipient</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoiceTableBody">
+                                {% for invoice in page_obj %}
+                                <tr>
+                                    <td><input class="form-check-input row-checkbox" type="checkbox" value="{{ invoice.invoice_number }}"></td>
+                                    <td>{{ invoice.invoice_number }}</td>
+                                    <td><a href="#" class="table-link">{{ invoice.order.order_number }}</a></td>
+                                    <td>{{ invoice.recipient_name }}</td>
+                                    <td>₹{{ invoice.total_amount }}</td>
+                                    <td><span class="status-badge {{ invoice.order_status|lower }}">{{ invoice.order_status }}</span></td>
+                                    <td>{{ invoice.date_of_issue|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-dark view-details" data-invoice-number="{{ invoice.invoice_number }}" data-bs-toggle="modal" data-bs-target="#viewDetailsModal"><i class="bi bi-eye-fill"></i></button>
+                                        <button class="btn btn-sm btn-outline-dark delete-invoice" data-invoice-number="{{ invoice.invoice_number }}"><i class="bi bi-trash-fill"></i></button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="8" class="text-center">No invoices found</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="load-more-container" id="loadMoreContainer">
+                        {% if page_obj.has_next %}
+                        <button class="btn btn-outline-dark" id="loadMoreButton" data-next-page="{{ page_obj.next_page_number }}">Load More</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="viewDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Invoice Details: <span id="detailInvoiceNumber"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="invoiceDetailsContent"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="customDateExportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Custom Export</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label>Start Date</label>
+                    <input type="date" class="form-control" id="customStartDate">
+                </div>
+                <div class="mb-3">
+                    <label>End Date</label>
+                    <input type="date" class="form-control" id="customEndDate">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-dark" id="exportCustomDate">Export CSV</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // [SECURITY] Endpoint obfuscation
+    const API = {
+        LIST: 'hidden',
+        DETAILS: 'hidden',
+        BULK: 'hidden',
+        EXPORT: 'hidden'
+    };
+
+    // ... DOM Elements ...
+
+    function fetchData(page, replace = false) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', page);
+        
+        fetch(`${API.LIST}?${params}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTableBody = doc.getElementById('invoiceTableBody').innerHTML;
+            
+            if (replace) {
+                document.getElementById('invoiceTableBody').innerHTML = newTableBody;
+            } else {
+                document.getElementById('invoiceTableBody').insertAdjacentHTML('beforeend', newTableBody);
+            }
+            attachEventListeners();
+        });
+    }
+
+    // View Details Logic
+    function handleViewDetails() {
+        const invoiceNumber = this.getAttribute('data-invoice-number');
+        document.getElementById('detailInvoiceNumber').textContent = invoiceNumber;
+        document.getElementById('invoiceDetailsContent').innerHTML = '<p>Loading...</p>';
+
+        // Mock detail fetch structure
+        fetch(`${API.DETAILS}`.replace('0', invoiceNumber), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                document.getElementById('invoiceDetailsContent').innerHTML = data.html;
+            } else {
+                document.getElementById('invoiceDetailsContent').innerHTML = `<p>Error: ${data.error}</p>`;
+            }
+        });
+    }
+
+    // Bulk Delete Logic
+    function handleDeleteInvoice() {
+        const invoiceNumber = this.getAttribute('data-invoice-number');
+        if(confirm("Delete this invoice?")) {
+            fetch(API.BULK, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ invoice_numbers: [invoiceNumber], action: 'DELETE' })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) fetchData(1, true);
+            });
+        }
+    }
+
+    // Export Logic
+    document.getElementById('exportCustomDate').addEventListener('click', () => {
+        const start = document.getElementById('customStartDate').value;
+        const end = document.getElementById('customEndDate').value;
+        window.location.href = `${API.EXPORT}?date_start=${start}&date_end=${end}`;
+    });
+
+    attachEventListeners();
+});
+</script>
+{% endblock content %}

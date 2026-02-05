@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Shirt Size Chart & Fit Guide | Twenty-Five First{% endblock title %}
+
+{% block meta_description %}Find your perfect fit with our detailed size guide. Compare measurements for Slim Fit, Regular Fit, and Formal shirts to ensure the perfect look.{% endblock meta_description %}
+
+{% block meta_keywords %}
+shirt size chart, mens shirt fit guide, slim fit vs regular fit, how to measure shirt size, india shirt sizes, buying guide, size chart S M L XL XXL
+{% endblock meta_keywords %}
+{% block extra_styles %}
+<style>
+    main {
+        padding-top: 20px;
+    }
+
+    .size-chart-section {
+        margin-top: 40px;
+        padding: 20px;
+        background-color: #f9f9f7;
+        border: 1px solid #e0e0e0;
+    }
+
+    .size-chart-section h3 {
+        font-family: 'Roboto', serif;
+        font-weight: 600;
+        font-size: 1.5rem;
+        color: #1a1a1a;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .size-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'Garamond', serif;
+        font-size: 18px;
+        color: #424242;
+    }
+
+    .size-table th,
+    .size-table td {
+        padding: 15px;
+        text-align: center;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .size-table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        background-color: #fff;
+    }
+
+    .size-table td {
+        font-weight: 300;
+    }
+
+    .size-image-container {
+        margin-top: 30px;
+        text-align: center;
+    }
+
+    .size-image-container img {
+        max-width: 100%;
+        height: auto;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+    }
+
+    .size-image-container p {
+        font-family: 'Garamond', serif;
+        font-size: 14px;
+        color: #666;
+        margin-top: 10px;
+    }
+
+    @media (max-width: 768px) {
+        .formal-text h2 {
+            font-size: 1.5rem;
+            text-align: center;
+        }
+
+        .formal-text p {
+            font-size: 16px;
+            text-align: center;
+            padding: 0 15px;
+            line-height: 1.6;
+        }
+
+        .video-container {
+            display: flex;
+            justify-content: center;
+        }
+
+        .size-table th,
+        .size-table td {
+            padding: 10px;
+            font-size: 16px;
+        }
+    }
+
+    @media (max-width: 576px) {
+
+        .size-table th,
+        .size-table td {
+            padding: 8px;
+            font-size: 14px;
+        }
+    }
+</style>
+{% endblock extra_styles %}
+{% block content %}
+<main>
+    <div class="container my-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6 col-md-12 text-center text-lg-start formal-text">
+                <h2 class="mb-4"><b><i>Size FAQs</i></b></h2>
+                <p class="formal-description" style="font-size: 18px;">
+                    Choosing the right size is essential for comfort and style. Our size chart helps you find the perfect fit based on your measurements. Whether you prefer a tailored look or a more relaxed fit, use the guide below to select the best size for you.
+                </p>
+            </div>
+
+            <div class="col-lg-6 col-md-12 d-flex justify-content-center video-container">
+                <video autoplay loop muted playsinline class="w-100" style="max-width: 100%; height: auto; object-fit: cover;">
+                    <source src="{% static 'video_asset/sizefq.mp4' %}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+        <br>
+        <hr>
+        <div class="size-image-container">
+            <img src="{% static 'img_asset/shrtsize.jpg' %}" alt="Size Chart Visual Guide">
+            <p>*Refer to this image for additional sizing guidance.</p>
+        </div>
+        <div class="size-chart-section">
+            <h3>Shirt Size Chart</h3>
+            <table class="size-table">
+                <thead>
+                    <tr>
+                        <th>Size</th>
+                        <th>Chest (cm)</th>
+
+                        <th>Length (cm)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>S</td>
+                        <td>[Placeholder]</td>
+                        <td>[Placeholder]</td>
+
+                    </tr>
+                    <tr>
+                        <td>M</td>
+                        <td>[Placeholder]</td>
+                        <td>[Placeholder]</td>
+
+                    </tr>
+                    <tr>
+                        <td>L</td>
+                        <td>[Placeholder]</td>
+                        <td>[Placeholder]</td>
+
+                    </tr>
+                    <tr>
+                        <td>XL</td>
+                        <td>[Placeholder]</td>
+                        <td>[Placeholder]</td>
+
+                    </tr>
+                    <tr>
+                        <td>XXL</td>
+                        <td>[Placeholder]</td>
+                        <td>[Placeholder]</td>
+
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+
+    </div>
+</main>
+{% endblock content %}

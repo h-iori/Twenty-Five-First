@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Contact Us | Customer Support - Twenty-Five First{% endblock title %}
+
+{% block meta_description %}Need help? Contact Twenty-Five First customer support. Call, email, or visit our Maharashtra office for orders, returns, and corporate enquiries.{% endblock meta_description %}
+
+{% block meta_keywords %}
+customer support, contact us, twenty five first help, return request, fashion enquiries,
+clothing store near me, shirt shop maharashtra, clothing manufacturers mumbai, wholesale shirt enquiry, bulk order shirts india
+{% endblock meta_keywords %}
+
+{% block extra_styles %}
+<style>
+    main {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 100;
+    }
+</style>
+{% endblock extra_styles %}
+
+{% block content %}
+<main>
+    <div class="jumbotron jumbotron-fluid text-center bg-dark position-relative">
+        <video autoplay loop muted class="img-fluid" style="width: 100%; height: 80%; object-fit: cover;">
+            <source src="{% static "video_asset/contact.mp4" %}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <h1 align="center" style="margin-top: 20px;">Customer Support</h1>
+
+    <section id="contact-form">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 col-12">
+                    <div class="contact-form">
+                        <h2><b>Contact Us</b></h2>
+                        <form>
+                            <div class="form-group">
+                                <input type="text" class="form-control" id="name" placeholder="Full Name">
+                            </div>
+                            <div class="form-group">
+                                <input type="email" class="form-control" id="email" placeholder="Email">
+                            </div>
+                            <div class="form-group">
+                                <textarea class="form-control" rows="5" id="message" placeholder="Message"></textarea>
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-dark custom-button">Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-md-6 col-12">
+                    <div class="google-map">
+                        <iframe
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3604.8911752151594!2d73.21056647493388!3d19.250010346487375!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be793007ebd2ae7%3A0xc124ee21cddecae8!2sMd%20Garments!5e1!3m2!1sen!2sin!4v1740421772367!5m2!1sen!2sin"
+                            width="100%"
+                            height="450"
+                            style="border:0;"
+                            allowfullscreen=""
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock content %}
+
+{% block extra_scripts %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ClothingStore",
+  "name": "Twenty-Five First",
+  "image": "{{ request.scheme }}://{{ request.get_host }}{% static 'img_asset/logo.webp' %}",
+  "telephone": "+91-9702383848", 
+  "email": "support@twentyfivefirst.com",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Shahad, Kamba Village",
+    "addressLocality": "Wagherapada",
+    "addressRegion": "Maharashtra",
+    "postalCode": "421301",
+    "addressCountry": "IN"
+  },
+  "openingHoursSpecification": {
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": [
+      "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+    ],
+    "opens": "09:00",
+    "closes": "18:00"
+  },
+  "priceRange": "₹₹" 
+}
+</script>
+{% endblock extra_scripts %}

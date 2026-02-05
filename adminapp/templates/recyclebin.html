@@ -1,0 +1,239 @@
+{% extends "adminbase.html" %}
+{% load static %}
+{% block title %}Admin Panel - Recycle Bin{% endblock title %}
+
+{% block content %}
+<head>
+    <style>
+        /* [PORTFOLIO NOTE] Minimalist Admin CSS */
+        :root {
+            --bs-body-bg: #ffffff;
+            --bs-body-color: #000000;
+            --bs-border-radius: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+        .main-content {
+            padding-top: 48px;
+            transition: margin-left .3s;
+        }
+        @media (min-width: 768px) {
+            .main-content { margin-left: 240px; }
+        }
+        .card, .form-control, .btn, .table, .alert, .modal-content, .list-group-item, .dropdown-menu {
+            border-radius: 0 !important;
+            border: 1px solid #000;
+        }
+        .btn-dark { background-color: #000; color: #fff; border-color: #000; }
+        .btn-dark:hover { background-color: #333; border-color: #333; }
+        
+        .recycle-bin-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .recycle-bin-box {
+            flex: 1 1 calc(33.333% - 1rem);
+            padding: 1.5rem;
+            border: 1px solid #000;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .recycle-bin-box:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+
+<div class="container-fluid">
+    <div class="row">
+        <main class="main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-dark">
+                <h1 class="h2">Recycle Bin</h1>
+            </div>
+
+            <div class="alert alert-success alert-dismissible fade" role="alert" id="successAlert">
+                <div id="successMessage"></div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            
+            {% if not model_name %}
+            <div class="recycle-bin-options">
+                <div class="recycle-bin-box" data-model="Order">Orders ({{ counts.Order|default:0 }})</div>
+                <div class="recycle-bin-box" data-model="Invoice">Invoices ({{ counts.Invoice|default:0 }})</div>
+                <div class="recycle-bin-box" data-model="ReturnRequest">Returns ({{ counts.ReturnRequest|default:0 }})</div>
+                <div class="recycle-bin-box" data-model="CancellationRequest">Cancels ({{ counts.CancellationRequest|default:0 }})</div>
+                <div class="recycle-bin-box" data-model="Shirt">Products ({{ counts.Shirt|default:0 }})</div>
+                <div class="recycle-bin-box" data-model="ProductReview">Product Review ({{ counts.ProductReview|default:0 }})</div>
+                <div class="recycle-bin-box" data-model="Coupon">Coupons ({{ counts.Coupon|default:0 }})</div>
+                <div class="recycle-bin-box" data-model="CustomerProfile">Customers ({{ counts.CustomerProfile|default:0 }})</div>
+                <div class="recycle-bin-box" data-model="GuestCheckout">Guest Users ({{ counts.GuestCheckout|default:0 }})</div>
+                <div class="recycle-bin-box" data-model="SupportTicket">Support Ticket ({{ counts.SupportTicket|default:0 }})</div>
+                <div class="recycle-bin-box" data-model="BulkOrderRequest">Bulk Query ({{ counts.BulkOrderRequest|default:0 }})</div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-trash-fill"></i> Deleted {{ model_name }}</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" id="bulkActions" data-bs-toggle="dropdown" disabled>
+                                Bulk Actions
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" data-action="RESTORE">Restore Selected</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" data-action="PERMANENTLY_DELETE">Permanently Delete Selected</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="recycleBinTable">
+                            <thead>
+                                <tr>
+                                    <th><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
+                                    <th>ID</th>
+                                    <th>Name/Identifier</th>
+                                    <th>Deleted At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recycleBinTableBody">
+                                {% for item in items %}
+                                <tr>
+                                    <td><input class="form-check-input row-checkbox" type="checkbox" value="{{ item.pk }}"></td>
+                                    <td>{{ item.pk }}</td>
+                                    <td>{{ item }}</td>
+                                    <td>{{ item.deleted_at|date:"Y-m-d H:i:s" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-dark view-details" data-id="{{ item.pk }}" data-bs-toggle="modal" data-bs-target="#viewDetailsModal"><i class="bi bi-eye-fill"></i> View</button>
+                                        <button class="btn btn-sm btn-outline-dark restore-item" data-id="{{ item.pk }}"><i class="bi bi-arrow-counterclockwise"></i> Restore</button>
+                                        <button class="btn btn-sm btn-outline-danger delete-item" data-id="{{ item.pk }}"><i class="bi bi-trash-fill"></i> Delete Permanently</button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="text-center">No deleted items found</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="viewDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewDetailsModalLabel">Item Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailsModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // [SECURITY] Endpoint Obfuscation
+    const API = {
+        DETAILS: 'hidden',
+        RESTORE: 'hidden',
+        DELETE: 'hidden',
+        BULK: 'hidden'
+    };
+
+    // ... DOM Elements ...
+
+    // View Details Logic
+    document.querySelectorAll('.view-details').forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-id');
+            const modelName = new URLSearchParams(window.location.search).get('model');
+            const modalBody = document.getElementById('detailsModalBody');
+            
+            modalBody.innerHTML = '<p>Loading...</p>';
+            
+            fetch(`${API.DETAILS}?item_id=${itemId}&model=${modelName}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        let html = '<dl class="row">';
+                        for (const [key, value] of Object.entries(result.data)) {
+                            html += `<dt class="col-sm-3 text-truncate">${key.replace(/_/g, ' ')}</dt>`;
+                            html += `<dd class="col-sm-9">${value !== null ? value : '<em>N/A</em>'}</dd>`;
+                        }
+                        html += '</dl>';
+                        modalBody.innerHTML = html;
+                    }
+                });
+        });
+    });
+
+    // Restore Item
+    document.querySelectorAll('.restore-item').forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-id');
+            const modelName = new URLSearchParams(window.location.search).get('model');
+            
+            if (confirm(`Are you sure you want to restore this item?`)) {
+                fetch(API.RESTORE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: JSON.stringify({ item_id: itemId, model: modelName })
+                }).then(() => window.location.reload());
+            }
+        });
+    });
+
+    // Permanently Delete Item
+    document.querySelectorAll('.delete-item').forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-id');
+            const modelName = new URLSearchParams(window.location.search).get('model');
+            
+            if (confirm(`Permanently delete this item? This cannot be undone.`)) {
+                fetch(API.DELETE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: JSON.stringify({ item_id: itemId, model: modelName })
+                }).then(() => window.location.reload());
+            }
+        });
+    });
+
+    // Bulk Actions
+    document.querySelectorAll('.dropdown-item[data-action]').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const action = this.getAttribute('data-action');
+            const itemIds = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+            const modelName = new URLSearchParams(window.location.search).get('model');
+
+            if (itemIds.length > 0 && confirm(`Apply ${action} to ${itemIds.length} items?`)) {
+                fetch(API.BULK, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: JSON.stringify({ item_ids: itemIds, action: action, model: modelName })
+                }).then(() => window.location.reload());
+            }
+        });
+    });
+
+    // ... Checkbox logic ...
+});
+</script>
+{% endblock content %}

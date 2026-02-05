@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_styles %}
+<style>
+    main {
+        margin-top: 80px;
+    }
+
+    .popup-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .popup-content {
+        background-color: #fff;
+        padding: 20px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .popup-content h3 {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 700;
+        font-size: 20px;
+        color: rgb(0, 0, 0);
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .popup-content p {
+        font-family: 'Garamond', serif;
+        font-size: 16px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+
+    @media (max-width: 576px) {
+        .popup-content {
+            padding: 15px;
+            max-width: 90%;
+        }
+
+    }
+</style>
+{% endblock extra_styles %}
+{% block title %}Address Book - Twenty-Five First{% endblock %}
+{% block content %}
+<main>
+    <div class="container my-5">
+        <h2 class="mb-4">Address Book</h2>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="list-group" style="top: 20px; margin-bottom: 20px;">
+                    <a href="{% url 'user_dashboard' %}" class="list-group-item list-group-item-action">Dashboard</a>
+                    <a href="{% url 'user_orders' %}" class="list-group-item list-group-item-action">My Orders</a>
+                    <a href="{% url 'wishlist' %}" class="list-group-item list-group-item-action">Wishlist</a>
+                    <a href="{% url 'addresses' %}" class="list-group-item list-group-item-action active">Address Book</a>
+                    <a href="{% url 'account_settings' %}" class="list-group-item list-group-item-action">Account Settings</a>
+                    <a href="{% url 'reviews' %}" class="list-group-item list-group-item-action">Reviews</a>
+                    <a href="{% url 'support' %}" class="list-group-item list-group-item-action">Support</a>
+                    <a href="#" class="list-group-item list-group-item-action text-danger" id="logoutLink">Logout</a>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="card mb-4">
+                    <div class="card-header">Saved Addresses</div>
+                    <div class="card-body">
+                        {% if addresses %}
+                        {% for address in addresses %}
+                        <div class="card mb-3 {% if address.is_default %}border-dark{% endif %}">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    {% if address.is_default %}
+                                    <span class="badge bg-dark">Default</span>
+                                    {% endif %}
+                                </h5>
+                                <p class="card-text">
+                                    {{ address.address_line }}, {{ address.city }},
+                                    {{ address.get_state_display }} - {{ address.zip_code }}
+                                </p>
+                                <button class="btn btn-outline-dark btn-sm me-2" data-bs-toggle="modal" data-bs-target="#editModal{{ address.id }}" style="border-radius:0px;">
+                                    Edit
+                                </button>
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="address_id" value="{{ address.id }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" style="border-radius:0px;" onclick="return confirm('Are you sure you want to delete this address?');">
+                                        Delete
+                                    </button>
+                                </form>
+                                {% if not address.is_default %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="set_default">
+                                    <input type="hidden" name="address_id" value="{{ address.id }}">
+                                    <button type="submit" class="btn btn-outline-dark btn-sm" style="border-radius:0px;">
+                                        Set as Default
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="editModal{{ address.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Edit Address</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <input type="hidden" name="action" value="edit">
+                                            <input type="hidden" name="address_id" value="{{ address.id }}">
+                                            <div class="mb-3">
+                                                <label class="form-label">Address</label>
+                                                <textarea class="form-control" name="address_line" rows="3">{{ address.address_line }}</textarea>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">City</label>
+                                                <input type="text" class="form-control" name="city" value="{{ address.city }}">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">State</label>
+                                                <select class="form-select" name="state">
+                                                    {% for code, name in indian_states %}
+                                                    <option value="{{ code }}" {% if code == address.state %}selected{% endif %}>
+                                                        {{ name }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Zip Code</label>
+                                                <input type="text" class="form-control" name="zip_code" value="{{ address.zip_code }}">
+                                            </div>
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="checkbox" name="is_default" id="isDefault{{ address.id }}" {% if address.is_default %}checked{% endif %}>
+                                                <label class="form-check-label" for="isDefault{{ address.id }}">
+                                                    Set as Default
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-outline-danger" style="border-radius:0px;" data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-outline-success" style="border-radius:0px;">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <p>No addresses saved yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Add New Address</div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="add">
+                            <div class="mb-3">
+                                <label class="form-label">Address</label>
+                                <textarea class="form-control" name="address_line" rows="3" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">City</label>
+                                <input type="text" class="form-control" name="city" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">State</label>
+                                <select class="form-select" name="state" required>
+                                    {% for code, name in indian_states %}
+                                    <option value="{{ code }}">{{ name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Zip Code</label>
+                                <input type="text" class="form-control" name="zip_code" required pattern="\d{6}" title="Zip code must be 6 digits">
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="is_default" id="isDefaultNew">
+                                <label class="form-check-label" for="isDefaultNew">
+                                    Set as Default
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-outline-dark" style="border-radius:0px;">
+                                Save Address
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="popup-overlay" id="logoutPopup">
+        <div class="popup-content">
+            <h3>Confirm Logout</h3>
+            <p>Oh no! You are Logging Out.... Are You Sure?</p>
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-outline-dark btn-sm" style="border-radius: 0px;" id="cancelLogout">Nah, Just Kidding</button>
+                <form method="POST" action="{% url 'logout_all' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger btn-sm" style="border-radius: 0px;">Yes, Log Me Out</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const logoutLink = document.getElementById('logoutLink');
+        const logoutPopup = document.getElementById('logoutPopup');
+        const confirmLogout = document.getElementById('confirmLogout');
+        const cancelLogout = document.getElementById('cancelLogout');
+
+        logoutLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            logoutPopup.style.display = 'flex';
+        });
+
+        cancelLogout.addEventListener('click', function() {
+            logoutPopup.style.display = 'none';
+        });
+
+        confirmLogout.addEventListener('click', function() {
+            fetch("{% url 'logout_all' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        showGlobalAlert('An error occurred. Please try again.', 'error');
+                    }
+                })
+                .catch(error => {
+                    showGlobalAlert('An error occurred. Please try again.', 'error');
+                });
+        });
+    });
+</script>
+{% endblock %}

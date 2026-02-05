@@ -1,0 +1,500 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
+<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+
+<style>
+    /* [PORTFOLIO NOTE] Critical CSS inlined for Critical Rendering Path optimization. 
+       Non-critical styles should be moved to external .css files in production. */
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Garamond', serif; line-height: 1.6; color: #1a1a1a; }
+    h1, h4, h6, h2 { font-family: 'Roboto', serif; font-weight: 100; }
+    
+    main {
+        margin-top: 80px;
+        padding: 20px;
+        max-width: 1400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* --- Product Layout --- */
+    .product-section {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+        align-items: flex-start;
+    }
+
+    .product-images { flex: 1; min-width: 300px; max-width: 600px; }
+    
+    .main-media-container {
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        position: relative;
+        overflow: hidden;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+    }
+
+    .product-main-slider { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    .product-main-slider .swiper-slide {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+    }
+    
+    .product-images .main-image, .main-video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+    }
+
+    .thumbnail-gallery {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+    }
+
+    .thumbnail-gallery img, .thumbnail-gallery video {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 2px;
+        border: 1px solid #e0e0e0;
+        cursor: pointer;
+        transition: border-color 0.3s ease;
+    }
+
+    .thumbnail-gallery .active { border: 2px solid #000; }
+
+    /* --- Product Details --- */
+    .product-details { flex: 1; min-width: 300px; padding: 0 20px; }
+    .product-details h4 { font-weight: 400; font-size: 24px; margin-bottom: 15px; }
+    
+    .rating { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+    .rating .stars { color: #ffbf00; }
+    .rating .stock { font-size: 20px; color: #2cdd9b; }
+    
+    .price { font-size: 24px; font-weight: 600; color: #1a1a1a; margin-bottom: 15px; }
+    .description { font-size: 16px; color: #424242; margin-bottom: 20px; }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .details-grid dt { font-weight: 600; }
+    
+    /* --- Variants & Colors --- */
+    .color-option { display: flex; gap: 10px; align-items: center; }
+    .color-circle {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 1px solid #e0e0e0;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    .color-circle:hover { transform: scale(1.2); border-color: #000; }
+    .color-circle.active { border: 3px solid #000; }
+
+    /* --- Inputs & Buttons --- */
+    .options { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; }
+    .options select, .options .quantity-input {
+        padding: 8px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        font-family: 'Garamond', serif;
+    }
+    
+    .quantity-input { display: flex; align-items: center; width: 120px; }
+    .quantity-input input { width: 40px; text-align: center; border: none; border-top: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; }
+    .quantity-input button { border: 1px solid #e0e0e0; background: #fff; cursor: pointer; }
+
+    .buttons { display: flex; flex-wrap: wrap; gap: 15px; }
+    .btn-buy, .btn-cart, .btn-save {
+        padding: 10px 20px;
+        font-family: 'Roboto', serif;
+        border-radius: 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-buy { background-color: #fff; color: green; border: 1px solid green; }
+    .btn-buy:hover { background-color: green; color: #fff; }
+    
+    .btn-cart { background-color: #fff; color: #000; border: 1px solid #000; }
+    .btn-cart:hover, .btn-cart.added { background-color: #000; color: #fff; }
+
+    /* --- Reviews --- */
+    .review-section {
+        max-width: 1400px;
+        margin: 50px auto;
+        padding: 20px 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    .review-list li {
+        border-bottom: 1px solid #e0e0e0;
+        padding: 20px 0;
+        display: flex;
+        gap: 15px;
+    }
+    .review-list .left img { width: 32px; height: 32px; border-radius: 50%; }
+    
+    /* --- Related Products Slider --- */
+    .product-card {
+        display: flex;
+        flex-direction: column;
+        background-color: #fff;
+        height: 640px;
+        transition: box-shadow 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+    .product-card:hover { box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
+    .product-image { width: 100%; height: 88%; object-fit: cover; }
+    .product-info { padding: 10px; text-align: center; }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 991px) {
+        .product-section { flex-direction: column; }
+        .product-card { height: 500px; }
+    }
+</style>
+{% endblock extra_styles %}
+
+{% block title %}Details - {{ site_name }}{% endblock title %}
+
+{% block content %}
+<main>
+    <section class="product-section">
+        <div class="product-images">
+            <div class="main-media-container" id="main-media-container">
+                <div class="swiper product-main-slider" id="product-main-slider">
+                    <div class="swiper-wrapper">
+                        {% for media in all_media %}
+                        <div class="swiper-slide">
+                            {% if media.media_type == 'image' %}
+                            <a href="{{ media.media_file.url }}" data-fancybox="product-gallery" data-caption="{{ shirt.name }}">
+                                <img class="main-image" src="{{ media.media_file.url }}" alt="{{ shirt.name }}">
+                            </a>
+                            {% elif media.media_type == 'video' %}
+                            <video class="main-video" loop muted playsinline>
+                                <source src="{{ media.media_file.url }}" type="video/mp4">
+                            </video>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="thumbnail-gallery">
+                {% for media in all_media %}
+                    {% if media.media_type == 'image' %}
+                    <img class="thumbnail {% if forloop.first %}active{% endif %}" src="{{ media.media_file.url }}" data-index="{{ forloop.counter0 }}">
+                    {% elif media.media_type == 'video' %}
+                    <div class="video-thumbnail-wrapper">
+                        <video class="thumbnail video-thumbnail {% if forloop.first %}active{% endif %}" src="{{ media.media_file.url }}#t=0.1" muted data-index="{{ forloop.counter0 }}"></video>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="product-details">
+            <h1 style="font-weight: 300;">{{ shirt.name }}</h1>
+            
+            <div class="rating">
+                <div class="stars">
+                    {% with rating=average_rating|floatformat:1 %}
+                        {% for i in "12345"|make_list %}
+                            {% if i|add:0 <= rating|add:0 %}
+                                <i class="fa fa-star"></i>
+                            {% elif i|add:0 <= rating|add:0.5 %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <span>{{ rating }}</span>
+                    {% endwith %}
+                </div>
+                <span class="stock">{% if default_variant.variants.first.stock > 0 %}In stock{% else %}Out of stock{% endif %}</span>
+            </div>
+
+            <div class="price">₹{{ default_variant.variants.first.price }}</div>
+            <p class="description">{{ shirt.description }}</p>
+
+            <div class="details-grid">
+                <dt>Type:</dt> <dd>{{ shirt.s_type.name }}</dd>
+                <dt>Color:</dt>
+                <dd class="color-option">
+                    {% for variant in color_variants %}
+                    <a href="{% url 'product_detail' variant.slug %}" class="color-circle-link">
+                        <div class="color-circle {% if variant == default_variant %}active{% endif %}" style="background-color: {{ variant.color.hex_code|default:'#000' }}"></div>
+                    </a>
+                    {% endfor %}
+                </dd>
+                <dt>Material:</dt> <dd>{{ shirt.material.name }}</dd>
+                <dt>Size Guide:</dt> <dd><a target="_blank" href="{% url 'sizefaq' %}">View Chart</a></dd>
+            </div>
+
+            <form id="add-to-cart-form" method="post" action="{% url 'add_to_cart' default_variant.variants.first.id %}">
+                {% csrf_token %}
+                <div class="options">
+                    <select name="size" id="size-select">
+                        {% for variant in default_variant.sorted_sizes %}
+                        <option value="{{ variant.id }}">{{ variant.size.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="quantity-input">
+                        <button type="button"><i class="fas fa-minus"></i></button>
+                        <input type="text" value="1" name="quantity">
+                        <button type="button"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button type="button" class="btn-buy" onclick="handleBuyNow()">Buy Now</button>
+                    <button type="button" class="btn-cart" data-variant-id="{{ default_variant.variants.first.id }}">
+                        <i class="fa fa-shopping-basket me-1"></i>
+                        <span>{% if is_in_cart %}Added{% else %}Add to Cart{% endif %}</span>
+                    </button>
+                    <a href="#" class="btn-save" data-variant-id="{{ default_variant.variants.first.id }}">
+                        <i class="fa fa-heart me-1"></i>
+                        <span>{% if user.is_authenticated and is_in_wishlist %}Saved{% else %}Save{% endif %}</span>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <hr>
+
+    <section class="review-section">
+        <div class="review-header">
+            <h4>{{ total_reviews }} Reviews</h4>
+            <div>
+                {% if user.is_authenticated %}
+                    <button class="review-action-btn btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                        {% if user_review %}Edit Review{% else %}Write a Review{% endif %}
+                    </button>
+                {% endif %}
+                <select id="review-sort">
+                    <option value="most_recent">Most Recent</option>
+                    <option value="low_to_high">Low to High</option>
+                    <option value="high_to_low">High to Low</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="review-list" id="review-list">
+            <ul>
+                {% for review in reviews %}
+                <li data-review-id="{{ review.id }}">
+                    <div class="left">
+                        <img src="{% static 'img/avatar_placeholder.png' %}" alt="User">
+                    </div>
+                    <div class="right">
+                        <h4>{{ review.user.username|default:'Anonymous' }}
+                            <span class="gig-rating"><i class="fa fa-star"></i> {{ review.rating }}</span>
+                        </h4>
+                        <div class="review-description"><p>{{ review.review_text }}</p></div>
+                        <span class="publish">{{ review.created_at|timesince }} ago</span>
+                    </div>
+                </li>
+                {% empty %}
+                <li>No reviews yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </section>
+
+    <section class="random-products-section">
+        <div class="cont">
+            {% if related_products %}
+                <div class="swiper random-products-slider">
+                    <div class="swiper-wrapper">
+                        {% for shirt in related_products %}
+                        <div class="swiper-slide">
+                            <a href="{% url 'product_detail' shirt.color_variants.first.slug %}" class="product-card">
+                                {% with primary_media=shirt.color_variants.first.media.filter|first %}
+                                <img src="{{ primary_media.media_file.url }}" class="product-image" loading="lazy">
+                                {% endwith %}
+                                <div class="product-info">
+                                    <h3 class="product-title">{{ shirt.name }}</h3>
+                                </div>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="swiper-button-prev"></div>
+                    <div class="swiper-button-next"></div>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if user.is_authenticated %}
+    <div class="modal fade" id="reviewModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{% if user_review %}Edit Review{% else %}Write Review{% endif %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="reviewForm" method="post" action="{% url 'submit_review' shirt.slug %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <label>Rating</label>
+                        <div class="star-rating" id="starRating">
+                            <i class="fa fa-star" data-value="1"></i>
+                            <i class="fa fa-star" data-value="2"></i>
+                            <i class="fa fa-star" data-value="3"></i>
+                            <i class="fa fa-star" data-value="4"></i>
+                            <i class="fa fa-star" data-value="5"></i>
+                        </div>
+                        <input type="hidden" name="rating" id="ratingInput" value="{{ user_review.rating|default:0 }}">
+                        
+                        <label class="mt-3">Your Review</label>
+                        <textarea class="form-control" name="review_text" rows="4">{{ user_review.review_text }}</textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-dark">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+{% with seo_source=active_variant.color_variant|default:default_variant %}
+{% if seo_source and seo_source.seo_data %}
+<script type="application/ld+json">{{ seo_source.seo_data.schema | json_script:"product-schema" }}</script>
+<script>
+    // Utility to inject Django-generated JSON schema into document head
+    function injectSchema(id) {
+        const element = document.getElementById(id);
+        if (element) {
+            const script = document.createElement('script');
+            script.type = 'application/ld+json';
+            script.text = element.textContent; // Safe: content is JSON serialized by Django
+            document.head.appendChild(script);
+        }
+    }
+    injectSchema('product-schema');
+</script>
+{% endif %}
+{% endwith %}
+
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+
+<script>
+    // [PORTFOLIO NOTE] Frontend Logic: Variant switching, Async Cart/Wishlist, Sliders
+    $(document).ready(function() {
+        Fancybox.bind('[data-fancybox="product-gallery"]', {});
+
+        // 1. Variant Selection Logic
+        $('#size-select').on('change', function() {
+            var variantId = $(this).val();
+            if (!variantId) return;
+
+            $('#add-to-cart-form').attr('action', '/cart/add/' + variantId + '/');
+            $('.btn-cart').data('variant-id', variantId);
+
+            // Fetch live price/stock via API
+            $.ajax({
+                url: '/api/variant-details/' + variantId + '/',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        $('.price').text('₹' + response.price_with_tax.toFixed(2));
+                        var stockSpan = $('.rating .stock');
+                        if (response.stock > 0) {
+                            stockSpan.text('In stock').css('color', '#2cdd9b');
+                            $('.btn-buy, .btn-cart').prop('disabled', false);
+                        } else {
+                            stockSpan.text('Out of stock').css('color', '#dc3545');
+                            $('.btn-buy, .btn-cart').prop('disabled', true);
+                        }
+                    }
+                }
+            });
+        }).trigger('change');
+
+        // 2. Initialize Main Product Slider
+        const mainSlider = new Swiper('.product-main-slider', {
+            effect: 'fade',
+            fadeEffect: { crossFade: true },
+            allowTouchMove: true
+        });
+
+        $('.thumbnail').on('click', function() {
+            mainSlider.slideTo($(this).data('index'));
+        });
+
+        // 3. Cart & Wishlist Async Handlers
+        $('.btn-cart').on('click', function() {
+            // [SECURITY] AJAX logic hidden for brevity (similar to toggleCart implementation)
+            toggleCart($(this).data('variant-id'));
+        });
+
+        // 4. Star Rating Interactive Logic
+        var stars = $('#starRating .fa-star');
+        var ratingInput = $('#ratingInput');
+        
+        stars.on('click', function() {
+            var rating = parseInt($(this).data('value'));
+            ratingInput.val(rating);
+            stars.each(function() {
+                $(this).toggleClass('checked', parseInt($(this).data('value')) <= rating);
+            });
+        });
+        
+        // Initial state for stars
+        if (ratingInput.val()) {
+            stars.each(function() {
+                if (parseInt($(this).data('value')) <= parseInt(ratingInput.val())) {
+                    $(this).addClass('checked');
+                }
+            });
+        }
+    });
+
+    function toggleCart(variantId) {
+        // Standard AJAX Add-to-cart logic
+        // ...
+    }
+
+    function handleBuyNow() {
+        var variantId = $('#size-select').val();
+        if (!variantId) { alert('Please select a size'); return; }
+        
+        $.ajax({
+            url: '/checkout/prepare/',
+            type: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            data: { variant_id: variantId, quantity: 1 },
+            success: function(resp) {
+                if (resp.success) window.location.href = resp.checkout_url;
+            }
+        });
+    }
+</script>
+{% endblock extra_scripts %}

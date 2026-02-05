@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Order confirmation for your recent purchase. View order details, estimated delivery, and next steps.">
+    <meta name="robots" content="noindex, nofollow">
+    <meta property="og:title" content="Order Confirmation - Your Order #{{ order.order_number }}">
+    <meta property="og:description" content="Thank you for your purchase! View your order details and track your shipment.">
+    <meta property="og:type" content="website">
+    <title>Order Confirmation - #{{ order.order_number }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        body {
+            background-color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .success-icon {
+            color: #22c55e;
+        }
+
+        .btn-primary {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #111827;
+            border-color: #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+            border-color: #d1d5db;
+        }
+
+        .text-gray-900 {
+            color: #111827;
+        }
+
+        .text-gray-600 {
+            color: #4b5563;
+        }
+
+        .text-gray-500 {
+            color: #6b7280;
+        }
+
+        .text-green-600 {
+            color: #16a34a;
+        }
+
+        .border-gray-200 {
+            border-color: #e5e7eb;
+        }
+
+        .card {
+            max-width: 48rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        a.text-blue-600 {
+            color: #2563eb;
+        }
+
+        a.text-blue-600:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5 px-3 px-md-4 px-lg-5">
+        <div class="card mx-auto p-4 p-md-5 rounded-3 bg-white">
+            <div class="text-center mb-4">
+                <svg class="mx-auto mb-3 success-icon" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h1 class="mt-3 fs-2 fw-bold text-gray-900">Order Confirmed!</h1>
+                <p class="mt-2 fs-5 text-gray-600">
+                    Thank you for your purchase, {% if order.user %}{{ order.user.first_name }}{% else %}{{ order.guest_checkout.first_name|default:"Customer" }}{% endif %}!
+                    Your order #{{ order.order_number }} has been successfully placed.
+                </p>
+                <p class="mt-2 text-gray-500">
+                    A confirmation email has been sent to
+                    {% if order.guest_checkout and order.guest_checkout.email %}
+                    {{ order.guest_checkout.email }}
+                    {% elif order.user and order.user.email %}
+                    {{ order.user.email }}
+                    {% else %}
+                    the email associated with your order.
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="border-top border-gray-200 pt-4">
+                <h2 class="fs-4 fw-semibold text-gray-900 mb-3">Order Summary</h2>
+                <div class="mb-4">
+                    {% for item in order.items.all %}
+                    <div class="d-flex align-items-center justify-content-between border-bottom border-gray-200 pb-3 mb-3">
+                        <div class="d-flex align-items-center">
+                            {% with primary_media=item.variant.color_variant.media.filter|first %}
+                            <img src="{{ primary_media.media_file.url|default:'/static/images/placeholder.jpg' }}" alt="{{ item.variant.color_variant.shirt.name }}" class="rounded me-3" style="width: 64px; height: 64px; object-fit: cover;">
+                            {% endwith %}
+                            <div>
+                                <p class="text-gray-900 fw-medium mb-1">{{ item.variant.color_variant.shirt.name }}</p>
+                                <p class="text-gray-500 small">
+                                    Color: {{ item.variant.color_variant.color.name }} | Size: {{ item.variant.size.name }}
+                                </p>
+                                <p class="text-gray-500 small">Quantity: {{ item.quantity }}</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-900 fw-medium">₹{{ item.subtotal|floatformat:2 }}</p>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-600">No items found in this order.</p>
+                    {% endfor %}
+                </div>
+
+                <div class="border-top border-gray-200 pt-3">
+                    <dl class="row g-2 small">
+                        <dt class="col-6 text-gray-600">Subtotal</dt>
+                        <dd class="col-6 text-gray-900 fw-medium text-end">₹{{ subtotal|floatformat:2 }}</dd>
+                        <dt class="col-6 text-gray-600">Tax</dt>
+                        <dd class="col-6 text-gray-900 fw-medium text-end">₹{{ tax|floatformat:2 }}</dd>
+                        {% if order.shipping and order.shipping.shipping_cost %}
+                        <dt class="col-6 text-gray-600">Shipping</dt>
+                        <dd class="col-6 text-gray-900 fw-medium text-end">₹{{ order.shipping.shipping_cost|floatformat:2 }}</dd>
+                        {% endif %}
+                        {% if order.shipping and order.shipping.shipping_method %}
+                        <dt class="col-6 text-gray-600">Shipping Method</dt>
+                        <dd class="col-6 text-gray-900 small text-end">{{ order.shipping.shipping_method.name }} ({{ order.shipping.shipping_method.estimated_delivery_days }} days)</dd>
+                        {% endif %}
+
+                        {% if order.payment.razorpay_payment_id %}
+                        <dt class="col-6 text-gray-600">Transaction ID</dt>
+                        <dd class="col-6 text-gray-900 small text-end">{{ order.payment.razorpay_payment_id }}</dd>
+                        {% endif %}
+
+                        {% if order.discount_amount > 0 %}
+                        <dt class="col-6 text-gray-600">Discount</dt>
+                        <dd class="col-6 text-green-600 fw-medium text-end">-₹{{ order.discount_amount|floatformat:2 }}</dd>
+                        {% endif %}
+                        <dt class="col-6 text-gray-600 fw-semibold">Total</dt>
+                        <dd class="col-6 text-gray-900 fw-semibold text-end">₹{{ order.total_amount|floatformat:2 }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="border-top border-gray-200 pt-4 mt-4">
+                <h2 class="fs-4 fw-semibold text-gray-900 mb-3">Shipping Information</h2>
+                <div class="text-gray-600 small">
+                    <p>{{ shipping_address.recipient }}</p>
+                    <p>
+                        {{ shipping_address.address_line }},
+                        {{ shipping_address.city }},
+                        {{ shipping_address.state }} {{ shipping_address.zip_code }}
+                    </p>
+                    <p>Phone: {{ shipping_address.phone_number }}</p>
+                    <p>Email: {{ shipping_address.email }}</p>
+                </div>
+                {% if order.shipping and order.shipping.tracking_number %}
+                <div class="mt-3">
+                    <p class="text-gray-600 small">Tracking Number: {{ order.shipping.tracking_number }}</p>
+                </div>
+                {% else %}
+                <div class="mt-3">
+                    <p class="text-gray-600 small">Tracking information will be provided once the order is shipped.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="border-top border-gray-200 pt-4 mt-4">
+                <h2 class="fs-4 fw-semibold text-gray-900 mb-3">What's Next?</h2>
+                <ul class="list-group list-group-flush small text-gray-600">
+                    <li class="list-group-item border-0 ps-0">You’ll receive an email with your order details and tracking information once your order ships.</li>
+                    <li class="list-group-item border-0 ps-0">
+                        Track your order status in your account
+                        {% if order.user %}
+                        <a href="#" class="text-blue-600">dashboard</a>
+                        {% else %}
+                        or contact support with your order number
+                        {% endif %}.
+                    </li>
+                    <li class="list-group-item border-0 ps-0">
+                        Need help? Contact our <a href="#" class="text-blue-600">support team</a> or reference your order number: {{ order.order_number }}.
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mt-4 d-flex justify-content-center gap-3">
+                <a href="{% url 'home' %}" class="btn btn-outline-dark px-4 py-2" style="border-radius:0px">Continue Shopping</a>
+                {% if order.user %}
+                <a href="{% url "user_orders" %}" class="btn btn-outline-dark px-4 py-2" style="border-radius:0px">View Order History</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Order",
+            "orderNumber": "{{ order.order_number }}",
+            "orderStatus": "{{ order.status }}",
+            "orderDate": "{{ order.created_at|date:'c' }}",
+            "customer": {
+                "@type": "Person",
+                "name": "{% if order.user %}{{ order.user.first_name }} {{ order.user.last_name }}{% else %}{{ order.guest_checkout.first_name }} {{ order.guest_checkout.last_name }}{% endif %}"
+            },
+            "acceptedOffer": [
+                {% for item in order.items.all %} {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Product",
+                        "name": "{{ item.variant.color_variant.shirt.name }}",
+                        "sku": "{{ item.variant.sku }}"
+                    },
+                    "price": "{{ item.subtotal|floatformat:2 }}",
+                    "priceCurrency": "INR",
+                    "orderedItem": {
+                        "@type": "OrderItem",
+                        "quantity": {{ item.quantity }}
+                    }
+                } {% if not forloop.last %}, {% endif %} {% endfor %}
+            ]
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

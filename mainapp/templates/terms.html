@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Privacy Policy | Data Protection - Twenty-Five First{% endblock title %}
+
+{% block meta_description %}Read the Privacy Policy of Twenty-Five First. Learn how we collect, use, and protect your personal data for a secure shopping experience.{% endblock meta_description %}
+
+{% block meta_keywords %}
+privacy policy, data protection, secure shopping, customer data safety, twenty five first policy, user privacy rights
+{% endblock meta_keywords %}
+{% block extra_styles %}
+<style>
+    main {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 300;
+    }
+
+    .terms-section {
+        padding: 20px 0;
+    }
+
+    .terms-section h2 {
+        font-family: 'Roboto', serif;
+        font-weight: 700;
+        font-size: 28px;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .terms-section h3 {
+        font-family: 'Roboto', serif;
+        font-weight: 600;
+        font-size: 20px;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        color: #1a1a1a;
+    }
+
+    .terms-section p,
+    .terms-section ul {
+        font-family: 'Garamond', serif;
+        font-size: 16px;
+        line-height: 1.6;
+        color: #424242;
+    }
+
+    .terms-section ul {
+        padding-left: 20px;
+    }
+
+    .terms-section ul li {
+        margin-bottom: 10px;
+    }
+
+    @media (max-width: 767px) {
+        h1 {
+            font-size: 24px;
+        }
+
+        .terms-section h2 {
+            font-size: 24px;
+        }
+
+        .terms-section h3 {
+            font-size: 18px;
+        }
+
+        .terms-section p,
+        .terms-section ul {
+            font-size: 14px;
+        }
+
+        .jumbotron h1 {
+            font-size: 28px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .terms-section {
+            padding: 15px 0;
+        }
+
+        .terms-section h2 {
+            font-size: 20px;
+        }
+
+        .terms-section h3 {
+            font-size: 16px;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+
+        .terms-section p,
+        .terms-section ul {
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .terms-section ul {
+            padding-left: 15px;
+        }
+
+        .terms-section ul li {
+            margin-bottom: 8px;
+        }
+
+        .jumbotron h1 {
+            font-size: 24px;
+        }
+    }
+
+    @media (max-width: 320px) {
+        .terms-section {
+            padding: 10px 0;
+        }
+
+        .terms-section h2 {
+            font-size: 18px;
+        }
+
+        .terms-section h3 {
+            font-size: 14px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .terms-section p,
+        .terms-section ul {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .terms-section ul {
+            padding-left: 10px;
+        }
+
+        .terms-section ul li {
+            margin-bottom: 6px;
+        }
+
+        .jumbotron h1 {
+            font-size: 20px;
+        }
+
+        .container {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+    }
+</style>
+{% endblock extra_styles %}
+
+{% block content %}
+<main>
+    <div class="jumbotron jumbotron-fluid text-center bg-dark position-relative">
+        <video autoplay loop muted class="img-fluid" style="width: 100%; max-width: 100%; height: auto;">
+            <source src="{% static 'video_asset/term.mp4' %}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div class="container position-absolute top-50 start-50 translate-middle" style="color: white;">
+            <h1 class="display-4">Terms and Conditions</h1>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <div class="terms-section">
+            <h2>Terms and Conditions</h2>
+
+            <h3>1. INTRODUCTION</h3>
+            <p>Welcome to Twenty-Five First ("Company," "we," "our," or "us"). These Terms and Conditions ("Terms") govern your access to and use of our website <a href="https://www.twentyfivefirst.com">www.twentyfivefirst.com</a> ("Website"), including any purchases made through the Website. By accessing or using the Website, you acknowledge that you have read, understood, and agreed to abide by these Terms. If you do not agree with any part of these Terms, you must refrain from using our services.</p>
+            <p>These Terms constitute a legally binding agreement between you ("User," "Customer," "Buyer") and Twenty-Five First regarding your access to and use of the Website and the purchase of any products. We reserve the right to modify these Terms at any time, and continued use of the Website after modifications indicate acceptance of the revised Terms.</p>
+            <p>These Terms and Conditions are drafted in accordance with the applicable laws of <strong>India</strong>, including but not limited to:</p>
+            <ul>
+                <li>The <strong>Consumer Protection Act, 2019</strong></li>
+                <li>The <strong>Information Technology Act, 2000</strong></li>
+                <li>The <strong>E-Commerce Rules, 2020</strong></li>
+                <li>The <strong>GST Act, 2017</strong></li>
+                <li>Any other relevant laws governing online transactions and digital commerce</li>
+            </ul>
+            <p>It is essential that all users carefully review these Terms before engaging with our services to avoid any misunderstanding regarding their rights and obligations.</p>
+
+            <h3>2. DEFINITIONS</h3>
+            <p>For the purposes of this agreement, the following definitions shall apply:</p>
+            <ul>
+                <li><strong>"Company"</strong> refers to Twenty-Five First, a legally registered business entity in India, engaged in the sale of shirts and apparel.</li>
+                <li><strong>"Website"</strong> refers to <a href="https://www.twentyfivefirst.com">www.twentyfivefirst.com</a>, including all subdomains, applications, and digital services provided therein.</li>
+                <li><strong>"User"</strong> refers to any individual or legal entity accessing the Website, either for informational purposes or for purchasing products.</li>
+                <li><strong>"Products"</strong> refer to shirts, clothing, and related accessories available for purchase through the Website.</li>
+                <li><strong>"Third-Party Platforms"</strong> include e-commerce marketplaces such as Amazon, Flipkart, Myntra, etc., where our products are also listed for sale.</li>
+                <li><strong>"Order"</strong> refers to any confirmed purchase transaction made by a User through the Website.</li>
+                <li><strong>"Payment Gateway"</strong> refers to third-party financial service providers facilitating online payments on the Website.</li>
+                <li><strong>"Force Majeure"</strong> refers to unforeseen circumstances beyond reasonable control that may affect business operations (e.g., natural disasters, strikes, or technical failures).</li>
+            </ul>
+
+            <h3>3. ELIGIBILITY</h3>
+            <p>To be eligible to use our Website and make purchases, you must meet the following criteria:</p>
+            <ul>
+                <li>You must be <strong>at least 18 years of age</strong>. If you are under 18, you may use our services only under the supervision of a parent or legal guardian who agrees to these Terms on your behalf.</li>
+                <li>You must possess the <strong>legal capacity</strong> to enter into binding contracts as per the <strong>Indian Contract Act, 1872</strong>.</li>
+                <li>You must ensure that all information provided during account registration and checkout is <strong>accurate, complete, and up to date</strong>.</li>
+                <li>You must not have been previously suspended or banned from using our Website for violation of policies.</li>
+            </ul>
+            <p>Failure to meet these eligibility requirements may result in suspension or termination of your account and legal consequences if fraudulent information is provided.</p>
+
+            <h3>4. ACCOUNT REGISTRATION AND SECURITY</h3>
+            <p>Users may be required to create an account to place orders. During the registration process, you agree to:</p>
+            <ul>
+                <li>Provide true, accurate, current, and complete information as requested during account setup.</li>
+                <li>Maintain the confidentiality of your account login details and ensure that no unauthorized person accesses your account.</li>
+                <li>Accept full responsibility for all activities carried out under your registered account.</li>
+                <li>Notify us immediately of any suspected <strong>unauthorized access, breach, or fraudulent activity</strong>.</li>
+            </ul>
+            <p>The Company reserves the right to <strong>suspend or terminate any account</strong> suspected of fraud, misrepresentation, or violation of these Terms.</p>
+
+            <h3>5. PRODUCT INFORMATION AND PRICING</h3>
+            <p>All product descriptions, images, specifications, and prices on our Website are intended for reference only and may differ slightly from the actual product.</p>
+            <p>We take reasonable care to ensure that pricing is accurate; however, we do <strong>not guarantee price accuracy</strong> due to potential technical errors or changes in taxation (e.g., GST revisions).</p>
+            <p>Prices displayed on the Website are in <strong>Indian Rupees (INR)</strong> and are subject to applicable <strong>GST and shipping fees</strong>, unless stated otherwise.</p>
+            <p>The Company reserves the right to <strong>modify prices at any time without prior notice</strong>.</p>
+
+            <h3>6. ORDERING AND PAYMENT TERMS</h3>
+            <p>Orders can be placed by adding items to the cart, proceeding to checkout, and completing the payment process.</p>
+            <p>Accepted payment methods include:</p>
+            <ul>
+                <li>UPI (Google Pay, PhonePe, Paytm, etc.)</li>
+                <li>Credit/Debit Cards (Visa, MasterCard, RuPay, etc.)</li>
+                <li>Net Banking</li>
+                <li>Wallet Payments</li>
+                <li>Cash on Delivery (COD) (where available)</li>
+            </ul>
+            <p>An order confirmation email will be sent upon successful transaction.</p>
+            <p>The Company <strong>reserves the right to cancel</strong> an order under the following circumstances:</p>
+            <ul>
+                <li>Payment failure or verification issues.</li>
+                <li>Stock unavailability.</li>
+                <li>Pricing errors.</li>
+                <li>Suspected fraudulent activity.</li>
+            </ul>
+
+            <h3>7. SHIPPING AND DELIVERY</h3>
+            <p>Orders are <strong>processed within 1-2 business days</strong> after confirmation.</p>
+            <p>Standard delivery takes <strong>5-7 business days</strong> in metro cities and up to <strong>10 business days</strong> in remote areas.</p>
+            <p>Shipping partners include Delhivery, Blue Dart, and India Post.</p>
+            <p>The Company is not responsible for <strong>delays due to force majeure events</strong>, incorrect addresses, or customs clearance issues (for international shipping).</p>
+
+            <h3>8. RETURN, EXCHANGE, AND REFUND POLICY</h3>
+            <p>Returns and exchanges are accepted within <strong>7 days of delivery</strong> for defective, damaged, or incorrect items.</p>
+            <p>Items must be <strong>unused, unwashed, and in original packaging</strong> to qualify for return.</p>
+            <p>Refunds are issued within <strong>5-7 business days</strong> after the returned item is inspected.</p>
+            <p>Some products may be non-returnable, including final sale items and customized products.</p>
+
+            <h3>9. GOVERNING LAW AND JURISDICTION</h3>
+            <p>These Terms are governed by the <strong>laws of India</strong>.</p>
+            <p>Any disputes shall be resolved through arbitration or legal proceedings in <strong>Mumbai</strong>.</p>
+
+            <h3>10. CONTACT INFORMATION</h3>
+            <p>For any queries, please contact:</p>
+            <ul>
+                <li><strong>Email:</strong> support@twentyfivefirst.com</li>
+                <li><strong>Phone:</strong> +91 9137269080</li>
+                <li><strong>Business Address:</strong> Wagherapada, Kamba Village, Shahad</li>
+            </ul>
+        </div>
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,470 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_styles %}
+<style>
+    main {
+        margin-top: 80px;
+    }
+
+    .popup-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .popup-content {
+        background-color: #fff;
+        padding: 20px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .popup-content h3 {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 700;
+        font-size: 20px;
+        color: rgb(0, 0, 0);
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .popup-content p {
+        font-family: 'Garamond', serif;
+        font-size: 16px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .popup-content .form-label {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .popup-content textarea {
+        resize: vertical;
+        min-height: 100px;
+        font-family: 'Roboto', sans-serif;
+        font-size: 14px;
+    }
+
+    .popup-content .form-control {
+        border: 1px solid #e0e0e0;
+        border-radius: 0;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .order-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .order-actions a,
+    .order-actions button {
+        text-align: center;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        border-radius: 0;
+    }
+
+    .loading-spinner {
+        display: none;
+        margin-left: 10px;
+    }
+
+    .status-text {
+        font-weight: 600;
+        color: #dc3545;
+    }
+
+    .text-danger {
+        font-size: 0.875em;
+    }
+
+    @media (max-width: 767px) {
+        .table {
+            display: block;
+        }
+
+        .table thead {
+            display: none;
+        }
+
+        .table tbody,
+        .table tr {
+            display: block;
+        }
+
+        .table tr {
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 10px 0;
+        }
+
+        .table td {
+            display: block;
+            text-align: left;
+            padding: 5px 10px;
+            position: relative;
+        }
+
+        .table td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            display: inline-block;
+            width: 40%;
+            padding-right: 10px;
+        }
+
+        .order-actions {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .order-actions a,
+        .order-actions button {
+            display: block;
+            width: 100%;
+            padding: 0.5rem;
+            font-size: 0.8125rem;
+        }
+
+        .popup-content {
+            padding: 15px;
+            max-width: 90%;
+        }
+    }
+
+    @media (max-width: 576px) {
+
+        .order-actions a,
+        .order-actions button {
+            padding: 0.5rem;
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock extra_styles %}
+{% block title %}My Orders - Twenty-Five First{% endblock %}
+
+{% block content %}
+<main>
+    <div class="container my-5">
+        <h2 class="mb-4">My Orders</h2>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="list-group" style="top: 20px; margin-bottom: 20px;">
+                    <a href="{% url 'user_dashboard' %}" class="list-group-item list-group-item-action">Dashboard</a>
+                    <a href="{% url 'user_orders' %}" class="list-group-item list-group-item-action active">My Orders</a>
+                    <a href="{% url 'wishlist' %}" class="list-group-item list-group-item-action">Wishlist</a>
+                    <a href="{% url 'addresses' %}" class="list-group-item list-group-item-action">Address Book</a>
+                    <a href="{% url 'account_settings' %}" class="list-group-item list-group-item-action">Account Settings</a>
+                    <a href="{% url 'reviews' %}" class="list-group-item list-group-item-action">Reviews</a>
+                    <a href="{% url 'support' %}" class="list-group-item list-group-item-action">Support</a>
+                    <a href="#" class="list-group-item list-group-item-action text-danger" id="logoutLink">Logout</a>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Amount</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order in orders %}
+                                    <tr id="order-row-{{ order.id }}">
+                                        <td data-label="Order ID">#{{ order.order_number }}</td>
+                                        <td data-label="Date">{{ order.created_at|date:"d M Y" }}</td>
+                                        <td data-label="Status" class="order-status">{{ order.status }}</td>
+                                        <td data-label="Amount">₹{{ order.total_amount|floatformat:2 }}</td>
+                                        <td data-label="Actions" class="order-actions">
+                                            <div class="order-actions">
+                                                {% if order.status == 'SHIPPED' %} <a href="#" class="btn btn-outline-dark">Track</a>{% endif %}
+                                                {% if order.invoice and order.status == 'DELIVERED' %}
+                                                <a href="{% url 'invoice_view' order.order_number %}" target='_blank' class="btn btn-outline-dark invoice-btn" data-order-number="{{ order.order_number }}">
+                                                    Get Invoice
+                                                    <span class="loading-spinner spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                </a>
+                                                {% else %}
+                                                <span class="status-text">Invoice Unavailable</span>
+                                                {% endif %}
+                                                {% if order.status in 'PENDING,PROCESSING' %}
+                                                <button type="button" class="btn btn-outline-danger cancel-btn" data-action="cancel" data-order-id="{{ order.id }}" data-order-number="{{ order.order_number }}" data-popup-target="cancelPopup{{ order.id }}">
+                                                    Cancel
+                                                    <span class="loading-spinner spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                </button>
+                                                {% elif order.status == 'DELIVERED' and order.is_within_return_period %}
+                                                {% if order.has_pending_return_request %}
+                                                <span class="status-text text-dark">Return Request Raised</span>
+                                                {% elif order.has_approved_return_request %}
+                                                <span class="status-text text-success">Return Request Approved</span>
+                                                {% elif order.has_rejected_return_request %}
+                                                <span class="status-text">Return Request Rejected</span>
+                                                {% else %}
+                                                <button type="button" class="btn btn-outline-danger return-btn" data-action="return" data-order-id="{{ order.id }}" data-order-number="{{ order.order_number }}" data-popup-target="returnPopup{{ order.id }}">
+                                                    Return
+                                                    <span class="loading-spinner spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                </button>
+                                                {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No orders found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="popup-overlay" id="logoutPopup">
+            <div class="popup-content">
+                <h3>Confirm Logout</h3>
+                <p>Oh no! You are Logging Out.... Are You Sure?</p>
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-outline-dark btn-sm" style="border-radius: 0px;" id="cancelLogout">Nah, Just Kidding</button>
+                    <form method="POST" action="{% url 'logout_all' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm" style="border-radius: 0px;">Yes, Log Me Out</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% for order in orders %}
+        {% if order.status in 'PENDING,PROCESSING' %}
+        <div class="popup-overlay" id="cancelPopup{{ order.id }}">
+            <div class="popup-content">
+                <h3>Cancel Order</h3>
+                <p>Are you sure you want to cancel Order #{{ order.order_number }}?</p>
+                <form id="cancelForm{{ order.id }}" method="POST" action="{% url 'cancel_order' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="order_id" value="{{ order.id }}">
+                    <div class="mb-3">
+                        <label for="cancelReason{{ order.id }}" class="form-label">Reason <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="cancelReason{{ order.id }}" name="reason" rows="4" required placeholder="Please provide a reason for your request."></textarea>
+                    </div>
+                    <div id="cancelErrorMessage{{ order.id }}" class="text-danger" style="display: none;"></div>
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-dark btn-sm" style="border-radius: 0px;" data-popup-close="cancelPopup{{ order.id }}">Close</button>
+                        <button type="submit" class="btn btn-outline-danger btn-sm" style="border-radius: 0px;" id="cancelSubmit{{ order.id }}">
+                            Cancel Order
+                        </button>
+                        <span class="loading-spinner spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+
+        {% for order in orders %}
+        {% if order.status == 'DELIVERED' and order.is_within_return_period and not order.has_pending_return_request and not order.has_approved_return_request and not order.has_rejected_return_request %}
+        <div class="popup-overlay" id="returnPopup{{ order.id }}">
+            <div class="popup-content">
+                <h3>Return Order</h3>
+                <p>Are you sure you want to request a return for Order #{{ order.order_number }}?</p>
+                <form id="returnForm{{ order.id }}" method="POST" action="{% url 'return_order' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="order_id" value="{{ order.id }}">
+                    <div class="mb-3">
+                        <label for="returnReason{{ order.id }}" class="form-label">Reason <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="returnReason{{ order.id }}" name="reason" rows="4" required placeholder="Please provide a reason for your request."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="returnImages{{ order.id }}" class="form-label">Upload Image (up to 3MB)</label>
+                        <input type="file" class="form-control" id="returnImages{{ order.id }}" name="images" accept=".png,.jpg,.jpeg">
+                    </div>
+                    <div id="returnFileErrorMessage{{ order.id }}" class="text-danger" style="display: none;"></div>
+                    <div id="returnErrorMessage{{ order.id }}" class="text-danger" style="display: none;"></div>
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-dark btn-sm" style="border-radius: 0px;" data-popup-close="returnPopup{{ order.id }}">Close</button>
+                        <button type="submit" class="btn btn-outline-danger btn-sm" style="border-radius: 0px;" id="returnSubmit{{ order.id }}">
+                            Request Return
+                            <span class="loading-spinner spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+</main>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script>
+    $(document).ready(function() {
+        function getCsrfToken() {
+            return $('meta[name="csrf-token"]').attr('content') ||
+                $('input[name="csrfmiddlewaretoken"]').val();
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        $('.invoice-btn').on('click', debounce(function(e) {
+            const $this = $(this);
+            const spinner = $this.find('.loading-spinner');
+            if ($this.hasClass('loading')) {
+                e.preventDefault();
+                return;
+            }
+            $this.addClass('loading');
+            spinner.show();
+        }, 500));
+
+        $('#logoutLink').on('click', function(e) {
+            e.preventDefault();
+            $('#logoutPopup').css('display', 'flex');
+        });
+
+        $('#cancelLogout').on('click', function() {
+            $('#logoutPopup').css('display', 'none');
+        });
+
+        $('.cancel-btn, .return-btn').on('click', function(e) {
+            e.preventDefault();
+            const popupId = $(this).data('popup-target');
+            $('#' + popupId).css('display', 'flex');
+        });
+
+        $('[data-popup-close]').on('click', function() {
+            const popupId = $(this).data('popup-close');
+            $('#' + popupId).css('display', 'none');
+        });
+
+        $('form[id^="cancelForm"], form[id^="returnForm"]').on('submit', function(e) {
+            e.preventDefault();
+            const form = $(this);
+            const formId = form.attr('id');
+            const orderId = form.find('input[name="order_id"]').val();
+            const actionUrl = form.attr('action');
+            const isReturn = formId.startsWith('returnForm');
+            const reason = form.find('textarea[name="reason"]').val().trim();
+            const submitBtn = form.find('button[type="submit"]');
+            const spinner = submitBtn.find('.loading-spinner');
+            const errorMessage = form.find(isReturn ? '#returnErrorMessage' + orderId : '#cancelErrorMessage' + orderId);
+            const fileErrorMessage = form.find(isReturn ? '#returnFileErrorMessage' + orderId : null);
+
+            errorMessage.hide();
+            if (isReturn && fileErrorMessage) fileErrorMessage.hide();
+
+            if (!reason) {
+                errorMessage.text('Please provide a reason.').show();
+                return;
+            }
+
+            if (isReturn) {
+                const imagesInput = form.find('input[name="images"]')[0];
+                const files = imagesInput.files;
+                const allowedTypes = ['image/jpeg', 'image/png'];
+                const maxFileSize = 3 * 1024 * 1024;
+
+                if (files.length > 1) {
+                    fileErrorMessage.text('Please upload only one image.').show();
+                    return;
+                }
+
+                if (files.length === 1) {
+                    const file = files[0];
+                    if (!allowedTypes.includes(file.type)) {
+                        fileErrorMessage.text(`Invalid file type: ${file.name}. Only JPG and PNG are allowed.`).show();
+                        return;
+                    }
+                    if (file.size > maxFileSize) {
+                        fileErrorMessage.text(`File is too large: ${file.name}. Maximum size is 3 MB.`).show();
+                        return;
+                    }
+                }
+            }
+
+            const formData = new FormData(this);
+            submitBtn.prop('disabled', true);
+            spinner.show();
+
+            $.ajax({
+                url: actionUrl,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#' + (isReturn ? 'returnPopup' : 'cancelPopup') + orderId).css('display', 'none');
+                        updateOrderRow(response.order.id, response.order);
+                        showGlobalAlert(response.message, 'success');
+                    } else {
+                        errorMessage.text(response.message).show();
+                    }
+                },
+                error: function(xhr) {
+                    const response = xhr.responseJSON || {};
+                    const message = response.message || 'An error occurred. Please try again.';
+                    errorMessage.text(message).show();
+                },
+                complete: function() {
+                    submitBtn.prop('disabled', false);
+                    spinner.hide();
+                }
+            });
+        });
+
+        function updateOrderRow(orderId, order) {
+            const row = $(`#order-row-${orderId}`);
+            const statusCell = row.find('.order-status');
+            const actionsCell = row.find('.order-actions');
+
+            statusCell.text(order.status);
+
+            if (order.status === 'CANCELLED') {
+                actionsCell.find('.cancel-btn').remove();
+            } else if (order.status === 'DELIVERED' && order.is_within_return_period) {
+                if (order.has_pending_return_request) {
+                    actionsCell.find('.return-btn').replaceWith('<span class="status-text">Return Request Raised</span>');
+                } else if (order.has_approved_return_request) {
+                    actionsCell.find('.return-btn').replaceWith('<span class="status-text">Return Request Approved</span>');
+                } else if (order.has_rejected_return_request) {
+                    actionsCell.find('.return-btn').replaceWith('<span class="status-text">Return Request Rejected</span>');
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

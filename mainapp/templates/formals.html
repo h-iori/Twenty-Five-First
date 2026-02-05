@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Men's Formal Shirts Online | Black, White & Cotton Office Wear - Twenty-Five First{% endblock title %}
+
+{% block meta_description %}Shop premium formal shirts for men. From classic white and sharp black formal shirts to breathable cotton office wear. Elevate your professional look today.{% endblock meta_description %}
+
+{% block meta_keywords %}
+black formal shirt, white formal shirt, cotton formal shirts for men, office wear shirts, business professional attire, striped formal shirts, crisp formal shirts, mens corporate wear india, tailored formal shirts, branded formal shirts under 1500
+{% endblock meta_keywords %}
+
+{% block og_title %}Sharp & Stylish Formal Shirts - Twenty-Five First{% endblock og_title %}
+{% block og_description %}Discover our collection of wrinkle-free, cotton, and satin formal shirts designed for the modern professional.{% endblock og_description %}
+
+{% block extra_styles %}
+<style>
+    main {
+        padding-top: 20px;
+    }
+</style>
+{% endblock extra_styles %}
+
+{% block content %}
+<main>
+    <div class="container my-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6 col-md-12 text-center text-lg-start formal-text">
+                <h2 class="mb-4"><b><i>Formal Wear</i></b></h2>
+                <p class="formal-description" style="font-size: 18px;">
+                    Perfect for the boardroom, business meetings, or any setting where making a polished impression matters.
+                    Our formal shirts are designed to elevate your wardrobe with impeccable style.
+                </p>
+            </div>
+            <div class="col-lg-6 col-md-12 d-flex justify-content-center video-container">
+                <video autoplay loop muted playsinline class="w-100" style="max-width: 100%; height: auto; object-fit: cover;">
+                    <source src="{% static 'video_asset/formal.mp4' %}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+    </div>
+    <h1 align="center" style="color: black; margin-top: 40px; margin-bottom: 40px;">Formal Shirts</h1>
+
+    <div class="search-results-container">
+        <button class="filter-toggle-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterSidebar" aria-controls="filterSidebar">
+            Filter Results
+        </button>
+
+        <div class="offcanvas offcanvas-start" tabindex="-1" id="filterSidebar" aria-labelledby="filterSidebarLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="filterSidebarLabel">Filters</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+                <form id="filterForm">
+                    <div class="filter-group">
+                        <label>Pattern</label>
+                        <select name="pattern" class="form-select">
+                            <option value="all">All Patterns</option>
+                            {% for pattern in patterns %}
+                            <option value="{{ pattern.name }}">{{ pattern.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Material</label>
+                        <select name="material" class="form-select">
+                            <option value="all">All Materials</option>
+                            {% for material in materials %}
+                            <option value="{{ material.name }}">{{ material.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Color</label>
+                        <select name="color" class="form-select">
+                            <option value="all">All Colors</option>
+                            {% for color in colors %}
+                            <option value="{{ color.name }}">{{ color.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Size</label>
+                        <select name="size" class="form-select">
+                            <option value="all">All Sizes</option>
+                            {% for size in sizes %}
+                            <option value="{{ size.name }}">{{ size.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Price Range</label>
+                        <select name="price" class="form-select">
+                            <option value="all">All Prices</option>
+                            <option value="0-500">₹0 - ₹500</option>
+                            <option value="500-1000">₹500 - ₹1000</option>
+                            <option value="1000+">₹1000+</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Sort By</label>
+                        <select name="sort" class="form-select">
+                            <option value="relevance">Relevance</option>
+                            <option value="price_low">Price: Low to High</option>
+                            <option value="price_high">Price: High to Low</option>
+                            <option value="newest">Newest First</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="offcanvas-footer">
+                <button class="reset-btn btn btn-outline-danger" style="border-radius: 0px; padding: 5px 15px; margin-left: 10px;" onclick="resetFilters()">Reset Filters</button>
+                <button id="apply-filters-btn" class="apply-btn btn btn-outline-dark" style="border-radius: 0px; padding: 5px 15px; margin-left: 10px;">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+    <div class="products-grid" id="products-grid">
+        {% for shirt in formal_products %}
+        {% with current_color=shirt.color_variants.all.0 %}
+        <a target="_blank" href="{% url 'product_detail' current_color.slug %}" class="product-card">
+            {% with primary_media=current_color.media.all.0 %}
+            <img src="{{ primary_media.media_file.url }}" class="product-image" alt="{{ shirt.name }} - Formal Shirt" loading="lazy">
+            {% endwith %}
+            {% if shirt.total_stock == 0 %}
+            <span class="badge bg-danger" style="position:absolute;z-index:2;">Out of Stock</span>
+            {% endif %}
+            <div class="product-info">
+                <h3 class="product-title">{{ shirt.name }}</h3>
+                {% with first_variant=current_color.variants.all.0 %}
+                    <p class="product-price">₹{{ first_variant.price }}</p>
+                {% endwith %}
+            </div>
+        </a>
+        {% endwith %}
+        {% empty %}
+        <p>No formal shirts available at the moment.</p>
+        {% endfor %}
+    </div>
+    <div class="load-more-container">
+        <button id="load-more-btn" class="btn btn-dark custom-button">Load More</button>
+    </div>
+    <div id="end-message" class="end-message">You Have Reached The End :)</div>
+    <br><br><br>
+</main>
+{% endblock content %}
+
+{% block extra_scripts %}
+<script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+        {
+            "@type": "CollectionPage",
+            "@id": "{{ canonical_url }}",
+            "url": "{{ canonical_url }}", 
+            "name": "Men's Formal Shirts",
+            "description": "Premium collection of formal shirts including cotton, linen, and satin blends.",
+            "mainEntity": {
+                "@type": "ItemList",
+                "itemListElement": [
+                    {% for shirt in formal_products %}
+                    {
+                        "@type": "ListItem",
+                        "position": {{ forloop.counter }},
+                        "url": "{{ request.scheme }}://{{ request.get_host }}{% url 'product_detail' shirt.color_variants.all.0.slug %}"
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            }
+        }, 
+        {
+            "@type": "BreadcrumbList",
+            "itemListElement": [{
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'home' %}"
+            }, {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Formal Shirts",
+                "item": "{{ canonical_url }}"
+            }]
+        }]
+    }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let page = 1;
+        let currentFilters = {};
+        const productsGrid = document.getElementById('products-grid');
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        const endMessage = document.getElementById('end-message');
+        const filterForm = document.getElementById('filterForm');
+        const applyBtn = document.getElementById('apply-filters-btn');
+        const resetBtn = document.querySelector('.reset-btn');
+        const filterSidebar = new bootstrap.Offcanvas(document.getElementById('filterSidebar'));
+        const apiUrl = '/api/formal-products/';
+
+        const productDetailBaseUrl = "{% url 'product_detail' 'placeholder' %}".replace('/placeholder/', '');
+
+        function collectFilters() {
+            return {
+                pattern: filterForm.querySelector('[name="pattern"]').value,
+                material: filterForm.querySelector('[name="material"]').value,
+                color: filterForm.querySelector('[name="color"]').value,
+                size: filterForm.querySelector('[name="size"]').value,
+                price: filterForm.querySelector('[name="price"]').value,
+                sort: filterForm.querySelector('[name="sort"]').value
+            };
+        }
+
+        function fetchProducts(resetPage = false, append = false) {
+            return new Promise((resolve, reject) => {
+                if (resetPage) page = 1;
+
+                const params = new URLSearchParams();
+                params.append('page', page);
+                for (const [key, value] of Object.entries(currentFilters)) {
+                    if (value && value !== 'all') {
+                        params.append(key, value);
+                    }
+                }
+
+                fetch(`${apiUrl}?${params.toString()}`, {
+                        credentials: 'include'
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            if (response.status === 404 || response.status === 204) return {
+                                results: [],
+                                next: null
+                            };
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!append) productsGrid.innerHTML = '';
+
+                        const results = data.results || data;
+
+                        if (results && results.length > 0) {
+                            results.forEach(shirt => {
+                                const productCard = document.createElement('a');
+                                productCard.className = 'product-card';
+                                productCard.target = '_blank';
+                                productCard.href = `${productDetailBaseUrl}/${shirt.slug}`;
+                                const outOfStockBadge = shirt.total_stock === 0 ?
+                                    `<span class="badge bg-danger" 
+                            style="position:absolute;z-index:2;">
+                      Out of Stock
+                    </span>` :
+                                    '';
+                                productCard.innerHTML = `
+                  <img src="${shirt.primary_media_url}" 
+                       class="product-image" 
+                       alt="${shirt.name} - Formal Shirt" 
+                       loading="lazy">
+                  ${outOfStockBadge}
+                  <div class="product-info">
+                    <h3 class="product-title">${shirt.name} ${shirt.total_stock}</h3>
+                    <p class="product-price">₹${shirt.base_price}</p>
+                  </div>
+                `;
+                                productsGrid.appendChild(productCard);
+                            });
+
+                            loadMoreBtn.style.display = data.next ? 'block' : 'none';
+                            endMessage.style.display = 'none';
+                        } else {
+                            if (!append) {
+                                productsGrid.innerHTML = '<p>No formal shirts match your filters.</p>';
+                            }
+                            loadMoreBtn.style.display = 'none';
+                            endMessage.style.display = 'block';
+                        }
+                        resolve();
+                    })
+                    .catch(error => {
+                        reject(error);
+                    });
+            });
+        }
+
+        applyBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            applyBtn.disabled = true;
+            applyBtn.textContent = 'Loading...';
+            currentFilters = collectFilters();
+
+            fetchProducts(true).finally(() => {
+                applyBtn.disabled = false;
+                applyBtn.textContent = 'Apply Filters';
+            });
+            filterSidebar.hide();
+        });
+
+        window.resetFilters = function() {
+            const defaults = {
+                pattern: 'all',
+                material: 'all',
+                color: 'all',
+                size: 'all',
+                price: 'all',
+                sort: 'relevance'
+            };
+            let needsReset = false;
+
+            filterForm.querySelectorAll('select').forEach(el => {
+                if (el.value !== defaults[el.name]) {
+                    needsReset = true;
+                    el.value = defaults[el.name];
+                }
+            });
+
+            if (!needsReset) {
+                filterSidebar.hide();
+                return;
+            }
+
+            resetBtn.disabled = true;
+            resetBtn.textContent = 'Resetting...';
+            currentFilters = {};
+            fetchProducts(true).finally(() => {
+                resetBtn.disabled = false;
+                resetBtn.textContent = 'Reset Filters';
+            });
+            filterSidebar.hide();
+        };
+
+        loadMoreBtn.addEventListener('click', function() {
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.textContent = 'Loading...';
+            page++;
+            fetchProducts(false, true).finally(() => {
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.textContent = 'Load More';
+            });
+        });
+    });
+</script>
+{% endblock extra_scripts %}

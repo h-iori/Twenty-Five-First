@@ -1,0 +1,338 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <title>{% block title %}Document{% endblock title %}</title>
+    <style>
+      :root {
+          --bs-body-bg: #ffffff;
+          --bs-body-color: #000000;
+          --bs-border-radius: 0;
+          --bs-border-radius-sm: 0;
+          --bs-border-radius-lg: 0;
+          --bs-border-radius-xl: 0;
+          --bs-border-radius-xxl: 0;
+      }
+
+      body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          background-color: var(--bs-body-bg);
+          color: var(--bs-body-color);
+      }
+      /* Custom Logout Modal Styling */
+        .modal-content {
+            border: 1px solid #000;
+            border-radius: 0; /* Sharp Edges */
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.1); /* Brutalist shadow */
+        }
+        /* Sidebar Nav Link Layout */
+        .sidebar .nav-link {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* The Red Dot */
+        .notification-dot {
+            height: 10px;
+            width: 10px;
+            background-color: #dc3545; /* Bootstrap Red */
+            border-radius: 50%;
+            display: none; /* Hidden by default */
+            margin-left: auto;
+            box-shadow: 0 0 0 2px #fff; 
+        }
+
+        /* Class to show the dot */
+        .show-dot .notification-dot {
+            display: inline-block !important;
+        }
+        .modal-header, .modal-footer {
+            border: none;
+            padding: 20px;
+        }
+
+        .modal-body {
+            padding: 0 20px 20px 20px;
+            font-family: serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        .modal-footer .btn {
+            border-radius: 0; /* Sharp Edges for Buttons */
+            border: 1px solid #000;
+            padding: 10px 25px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .btn-secondary-custom {
+            background-color: #fff;
+            color: #000;
+        }
+
+        .btn-secondary-custom:hover {
+            background-color: #f0f0f0;
+        }
+
+        .btn-danger-custom {
+            background-color: #ff0000;
+            color: #fff;
+        }
+
+        .btn-danger-custom:hover {
+            background-color: #cc0000;
+        }
+
+        /* Ensure centering */
+        .modal-dialog-centered {
+            display: flex;
+            align-items: center;
+            min-height: calc(100% - 3.5rem);
+        }
+      .sidebar {
+          position: fixed;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          z-index: 100;
+          padding: 48px 0 0;
+          box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.1);
+          background-color: #f8f9fa;
+          transition: all 0.3s;
+      }
+      
+      @media (max-width: 767.98px) {
+          .sidebar {
+              transform: translateX(-100%);
+          }
+          .sidebar.active {
+              transform: translateX(0);
+          }
+          .main-content {
+              padding-left: 0;
+          }
+      }
+
+      .sidebar-sticky {
+          position: relative;
+          top: 0;
+          height: calc(100vh - 48px);
+          padding-top: .5rem;
+          overflow-x: hidden;
+          overflow-y: auto;
+      }
+
+      .nav-link {
+          font-weight: 500;
+          color: #333;
+          border-radius: 0 !important;
+      }
+
+      .nav-link .bi {
+          margin-right: 8px;
+      }
+
+      .nav-link.active,
+      .nav-link:hover {
+          color: #ffffff;
+          background-color: #000000;
+      }
+      .navbar {
+          background-color: #fff;
+          box-shadow: 0 2px 4px rgba(0,0,0,.1);
+      }
+      </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg fixed-top p-0">
+        <div class="container-fluid">
+            <button class="btn btn-dark d-md-none me-2" type="button" id="sidebarToggle">
+                <i class="bi bi-list"></i>
+            </button>
+            <a class="navbar-brand fw-bold me-auto" href="{% url "adminpanel" %}">ADMIN PANEL</a>
+            
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar bg-light">
+                <div class="sidebar-sticky pt-3">
+                    <div class="text-center mb-4">
+                        <a href="{% url "home" %}" class="d-block text-decoration-none">
+                            <img src="{% static 'img_asset/logo.webp' %}" alt="Shirt Store Logo" class="img-fluid" style="max-width: 150px; border: 1px solid #000;">
+                        </a>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'adminpanel' %}active{% endif %}" aria-current="page" href="{% url 'adminpanel' %}">
+                                <span><i class="bi bi-grid-1x2-fill"></i> Dashboard</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'adminorder' %}active{% endif %}" href="{% url 'adminorder' %}" id="nav-orders">
+                                <span><i class="bi bi-box-seam-fill"></i> Orders</span>
+                                <span class="notification-dot"></span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'admininvoice' %}active{% endif %}" href="{% url 'admininvoice' %}">
+                                <span><i class="bi bi-file-earmark-text-fill"></i> Invoices</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'adminreturn' %}active{% endif %}" href="{% url 'adminreturn' %}" id="nav-returns">
+                                <span><i class="bi bi-arrow-return-left"></i> Returns</span>
+                                <span class="notification-dot"></span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'admincancel' %}active{% endif %}" href="{% url 'admincancel' %}" id="nav-cancels">
+                                <span><i class="bi bi-x-circle-fill"></i> Cancels</span>
+                                <span class="notification-dot"></span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'adminproduct' %}active{% endif %}" href="{% url 'adminproduct' %}" id="nav-products">
+                                <span><i class="bi bi-bag-check-fill"></i> Products</span>
+                                <span class="notification-dot"></span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'adminreview' %}active{% endif %}" href="{% url 'adminreview' %}" id="nav-reviews">
+                                <span><i class="bi bi-star-fill"></i> Product Review</span>
+                                <span class="notification-dot"></span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'admincoupon' %}active{% endif %}" href="{% url 'admincoupon' %}" id="nav-coupons">
+                                <span><i class="bi bi-ticket-fill"></i> Coupons</span>
+                                <span class="notification-dot"></span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'admincustomer' %}active{% endif %}" href="{% url 'admincustomer' %}" id="nav-customers">
+                                <span><i class="bi bi-people-fill"></i> Customers</span>
+                                <span class="notification-dot"></span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'adminguest' %}active{% endif %}" href="{% url 'adminguest' %}" id="nav-guests">
+                                <span><i class="bi bi-person-fill"></i> Guest Users</span>
+                                <span class="notification-dot"></span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'adminsupport' %}active{% endif %}" href="{% url 'adminsupport' %}" id="nav-support">
+                                <span><i class="bi bi-headset"></i> Support Ticket</span>
+                                <span class="notification-dot"></span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'bulk_query_management' %}active{% endif %}" href="{% url 'bulk_query_management' %}" id="nav-bulk">
+                                <span><i class="bi bi-list-task"></i> Bulk Query</span>
+                                <span class="notification-dot"></span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'admin_recycle_bin' %}active{% endif %}" href="{% url 'admin_recycle_bin' %}">
+                                <span><i class="bi bi-trash"></i> Recycle Bin</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item mt-auto">
+                            <hr class="text-white-50">
+                            <a class="nav-link text-danger" href="#" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
+                                <span><i class="bi bi-box-arrow-right"></i> Logout</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+<div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold text-uppercase" id="logoutModalLabel" style="letter-spacing: 2px;">Security Alert</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: grayscale(1) invert(0);"></button>
+            </div>
+            <div class="modal-body text-center">
+                Are you sure you want to terminate your current session?
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary-custom text-uppercase" data-bs-dismiss="modal">Cancel</button>
+                <a href="{% url 'admin_logout' %}" class="btn btn-danger-custom text-uppercase">Confirm Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% block content %}
+
+{% endblock content %}
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Mobile sidebar toggle functionality
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebarMenu');
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function () {
+                    sidebar.classList.toggle('active');
+                });
+            }
+
+            // Notification Logic - AJAX Fetch
+            const notificationMap = {
+                'orders': 'nav-orders',
+                'returns': 'nav-returns',
+                'cancels': 'nav-cancels',
+                'products': 'nav-products',
+                'reviews': 'nav-reviews',
+                'coupons': 'nav-coupons',
+                'customers': 'nav-customers',
+                'guests': 'nav-guests',
+                'support': 'nav-support',
+                'bulk': 'nav-bulk'
+            };
+
+            fetch("{% url 'admin_sidebar_api' %}")
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    for (const [key, hasNotification] of Object.entries(data)) {
+                        if (hasNotification && notificationMap[key]) {
+                            const element = document.getElementById(notificationMap[key]);
+                            if (element) {
+                                element.classList.add('show-dot');
+                            }
+                        }
+                    }
+                })
+                .catch(error => console.error('Error fetching notifications:', error));
+        });
+    </script>
+</body>
+</html>

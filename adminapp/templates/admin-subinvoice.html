@@ -1,0 +1,616 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Invoice: #{{invoice_number}}</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style type="text/css">
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f0f0f0;
+            width: 100%;
+            height: 100%;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        div, p, a, li, td {
+            -webkit-text-size-adjust: none;
+        }
+
+        .ReadMsgBody, .ExternalClass {
+            width: 100%;
+            background-color: #ffffff;
+        }
+
+        html {
+            width: 100%;
+        }
+
+        p {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .visibleMobile {
+            display: none;
+        }
+
+        .hiddenMobile {
+            display: block;
+        }
+
+        .article {
+            white-space: normal;
+            overflow-wrap: break-word;
+        }
+            .download-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background-color: #1a1a1a; /* Professional dark gray-black */
+            color: #ffffff;
+            border-radius: 50%;
+            text-decoration: none;
+            font-size: 20px; /* Matches font scale for consistency */
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            margin: 15px auto; /* Centered with spacing */
+        }
+
+        .download-button:hover {
+            background-color: #333333; /* Lighter gray on hover */
+            transform: translateY(-2px); /* Lift effect */
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .download-button:active {
+            transform: translateY(0); /* Pressed effect */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .download-button i {
+            line-height: 50px; /* Center icon vertically */
+        }
+
+        @media only screen and (max-width: 600px) {
+            body {
+                width: auto !important;
+            }
+
+            table[class="fullTable"] {
+                width: 96% !important;
+                clear: both;
+            }
+
+            table[class="fullPadding"] {
+                width: 85% !important;
+                clear: both;
+            }
+
+            table[class="col"] {
+                width: 45% !important;
+            }
+
+            .erase {
+                display: none;
+            }
+
+            .signature-img {
+                width: 100px !important;
+                height: auto !important;
+            }
+            .download-button {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .download-button i {
+                line-height: 40px;
+            }
+        }
+
+        @media only screen and (max-width: 420px) {
+            table[class="fullTable"] {
+                width: 100% !important;
+                clear: both;
+            }
+
+            table[class="fullPadding"] {
+                width: 85% !important;
+                clear: both;
+            }
+
+            table[class="col"] {
+                width: 100% !important;
+                clear: both;
+            }
+
+            table[class="col"] td {
+                text-align: left !important;
+            }
+
+            .erase {
+                display: none;
+                font-size: 0;
+                max-height: 0;
+                line-height: 0;
+                padding: 0;
+            }
+
+            .visibleMobile {
+                display: block !important;
+            }
+
+            .hiddenMobile {
+                display: none !important;
+            }
+
+            .signature-img {
+                width: 80px !important;
+                height: auto !important;
+            }
+            .download-button {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+            }
+
+            .download-button i {
+                line-height: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <a href="{% url 'admin_invoice_pdf' order_number %}" 
+           class="download-button" 
+           title="Download Invoice as PDF" 
+           aria-label="Download Invoice as PDF">
+            <i class="fas fa-download"></i>
+        </a>
+    </div>
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" class="fullTable" bgcolor="#f0f0f0">
+        <tr>
+            <td height="20"></td>
+        </tr>
+        <tr>
+            <td>
+                <table width="600" border="0" cellpadding="0" cellspacing="0" align="center" class="fullTable" bgcolor="#ffffff" style="border-radius: 10px 10px 0 0;">
+                    <tr>
+                        <td height="25"></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table width="480" border="0" cellpadding="0" cellspacing="0" align="center" class="fullPadding">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <table width="220" border="0" cellpadding="0" cellspacing="0" align="left" class="col">
+                                                <tbody>
+                                                    <tr>
+                                                        <td align="left">
+                                                            <img src="{% static "img_asset/logo.webp" %}" width="32" height="32" alt="logo" style="width: 70%; height: auto;" />
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td height="15"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="font-size: 12px; color: #000000; font-family: 'Open Sans', sans-serif; line-height: 18px; vertical-align: top; text-align: left;">
+                                                            Invoice Number: {{ invoice_number }}<br>
+                                                            Date of Issue: {{ date_of_issue|date:"F j, Y" }}<br>
+                                                            Auto-Generated Invoice
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <table width="220" border="0" cellpadding="0" cellspacing="0" align="right" class="col">
+                                                <tbody>
+                                                    <tr class="visibleMobile">
+                                                        <td height="20"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="font-size: 21px; color: #000000; letter-spacing: -1px; font-family: 'Open Sans', sans-serif; line-height: 1; vertical-align: top; text-align: right;">
+                                                            Invoice
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td height="20"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="font-size: 12px; color: #000000; font-family: 'Open Sans', sans-serif; line-height: 18px; vertical-align: top; text-align: right;">
+                                                            <small>ORDER: </small> #{{ order_number }}<br>
+                                                            <small>{{ order_date|date:"F j, Y" }}</small>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td height="25"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" class="fullTable" bgcolor="#f0f0f0">
+        <tbody>
+            <tr>
+                <td>
+                    <table width="600" border="0" cellpadding="0" cellspacing="0" align="center" class="fullTable" bgcolor="#ffffff">
+                        <tbody>
+                            <tr>
+                                <td height="30"></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <table width="480" border="0" cellpadding="0" cellspacing="0" align="center" class="fullPadding">
+                                        <tbody>
+                                            <tr>
+                                                <th style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; font-weight: normal; line-height: 1; vertical-align: top; padding: 0 10px 7px 0;" width="42%" align="left">
+                                                    Item
+                                                </th>
+                                                <th style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; font-weight: normal; line-height: 1; vertical-align: top; padding: 0 0 7px;" align="left">
+                                                    <small>HSN</small>
+                                                </th>
+                                                <th style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; font-weight: normal; line-height: 1; vertical-align: top; padding: 0 0 7px;" align="center">
+                                                    Quantity
+                                                </th>
+                                                {% if not tax_details.is_inter_state %}
+                                                <th style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; font-weight: normal; line-height: 1; vertical-align: top; padding: 0 0 7px;" align="center">
+                                                    CGST
+                                                </th>
+                                                <th style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; font-weight: normal; line-height: 1; vertical-align: top; padding: 0 0 7px;" align="center">
+                                                    SGST
+                                                </th>
+                                                {% else %}
+                                                <th style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; font-weight: normal; line-height: 1; vertical-align: top; padding: 0 0 7px;" align="center">
+                                                    IGST
+                                                </th>
+                                                {% endif %}
+                                                <th style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; font-weight: normal; line-height: 1; vertical-align: top; padding: 0 0 7px;" align="right">
+                                                    Subtotal
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <td height="1" style="background: #000000;" colspan="{% if tax_details.is_inter_state %}5{% else %}6{% endif %}"></td>
+                                            </tr>
+                                            <tr>
+                                                <td height="10" colspan="{% if tax_details.is_inter_state %}5{% else %}6{% endif %}"></td>
+                                            </tr>
+                                            {% for item in items %}
+                                            <tr>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 18px; vertical-align: top; padding: 10px 0;" class="article">
+                                                    {{ item.description }}
+                                                </td>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #666666; line-height: 18px; vertical-align: top; padding: 10px 0;">
+                                                    <small>{{ item.hsn_code }}</small>
+                                                </td>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #666666; line-height: 18px; vertical-align: top; padding: 10px 0;" align="center">
+                                                    {{ item.quantity }}
+                                                </td>
+                                                {% if not tax_details.is_inter_state %}
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #666666; line-height: 18px; vertical-align: top; padding: 10px 0;" align="center">
+                                                    ₹{{ item.cgst_amount }} ({{ item.cgst_rate }}%)
+                                                </td>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #666666; line-height: 18px; vertical-align: top; padding: 10px 0;" align="center">
+                                                    ₹{{ item.sgst_amount }} ({{ item.sgst_rate }}%)
+                                                </td>
+                                                {% else %}
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #666666; line-height: 18px; vertical-align: top; padding: 10px 0;" align="center">
+                                                    ₹{{ item.igst_amount }} ({{ item.igst_rate }}%)
+                                                </td>
+                                                {% endif %}
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 18px; vertical-align: top; padding: 10px 0;" align="right">
+                                                    ₹{{ item.total_amount }}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td height="1" colspan="{% if tax_details.is_inter_state %}5{% else %}6{% endif %}" style="border-bottom: 1px solid #cccccc;"></td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td height="20"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" class="fullTable" bgcolor="#f0f0f0">
+        <tbody>
+            <tr>
+                <td>
+                    <table width="600" border="0" cellpadding="0" cellspacing="0" align="center" class="fullTable" bgcolor="#ffffff">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <table width="480" border="0" cellpadding="0" cellspacing="0" align="center" class="fullPadding">
+                                        <tbody>
+                                            <tr>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #666666; line-height: 22px; vertical-align: top; text-align: right;">
+                                                    Subtotal
+                                                </td>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 22px; vertical-align: top; text-align: right; white-space: nowrap;" width="80">
+                                                    ₹{{ subtotal }}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #666666; line-height: 22px; vertical-align: top; text-align: right;">
+                                                    Shipping & Handling
+                                                </td>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 22px; vertical-align: top; text-align: right;">
+                                                    ₹{{ shipping_cost }}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #666666; line-height: 22px; vertical-align: top; text-align: right;">
+                                                    Discount & Coupon
+                                                </td>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #00FF00; line-height: 22px; vertical-align: top; text-align: right;">
+                                                    (-) ₹{{ discount_amount }}
+                                                </td>
+                                            </tr>
+                                            {% if not tax_details.is_inter_state %}
+                                            <tr>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #666666; line-height: 22px; vertical-align: top; text-align: right;">
+                                                    <small>CGST</small>
+                                                </td>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #666666; line-height: 22px; vertical-align: top; text-align: right;">
+                                                    <small>₹{{ tax_details.cgst_amount }} ({{ tax_details.cgst_rate }}%)</small>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="font-size osv: 12px; font-family: 'Open Sans', sans-serif; color: #666666; line-height: 22px; vertical-align: top; text-align: right;">
+                                                    <small>SGST</small>
+                                                </td>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #666666; line-height: 22px; vertical-align: top; text-align: right;">
+                                                    <small>₹{{ tax_details.sgst_amount }} ({{ tax_details.sgst_rate }}%)</small>
+                                                </td>
+                                            </tr>
+                                            {% else %}
+                                            <tr>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #666666; line-height: 22px; vertical-align: top; text-align: right;">
+                                                    <small>IGST</small>
+                                                </td>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #666666; line-height: 22px; vertical-align: top; text-align: right;">
+                                                    <small>₹{{ tax_details.igst_amount }} ({{ tax_details.igst_rate }}%)</small>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            <tr>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 22px; vertical-align: top; text-align: right;">
+                                                    <strong>Grand Total (Incl. Tax)</strong>
+                                                </td>
+                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 22px; vertical-align: top; text-align: right;">
+                                                    <strong>₹{{ total_amount }}</strong>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" class="fullTable" bgcolor="#f0f0f0">
+        <tbody>
+            <tr>
+                <td>
+                    <table width="600" border="0" cellpadding="0" cellspacing="0" align="center" class="fullTable" bgcolor="#ffffff">
+                        <tbody>
+                            <tr>
+                                <td height="30"></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <table width="480" border="0" cellpadding="0" cellspacing="0" align="center" class="fullPadding">
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <table width="220" border="0" cellpadding="0" cellspacing="0" align="left" class="col">
+                                                        <tbody>
+                                                            <tr>
+                                                                <td style="font-size: 11px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 1; vertical-align: top;">
+                                                                    <strong>BILLING INFORMATION</strong>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td height="10"></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 20px; vertical-align: top;">
+                                                                    {{ recipient.name }}<br>
+                                                                    {{ recipient.address }}<br>
+                                                                    {% if recipient.gstin %}GSTIN: {{ recipient.gstin }}<br>{% endif %}
+                                                                    T: {{ recipient.phone_number }}<br>
+                                                                    Place of Supply: {{ recipient.state_code }}<br>
+                                                                    Recipient's State Code: {{ recipient.state_code }}
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <table width="220" border="0" cellpadding="0" cellspacing="0" align="right" class="col">
+                                                        <tbody>
+                                                            <tr class="visibleMobile">
+                                                                <td height="20"></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-size: 11px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 1; vertical-align: top;">
+                                                                    <strong>PAYMENT METHOD</strong>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td height="10"></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 20px; vertical-align: top;">
+                                                                    {{ order.payment.payment_method|title }}<br>
+                                                                    {% if order.payment.transaction_id %}
+                                                                    Transaction ID: <a href="#" style="color: #000000; text-decoration: underline;">{{ order.payment.transaction_id }}</a><br>
+                                                                    {% endif %}
+                                                                    <a href="#" style="color: #666666; text-decoration: underline;">Right of Withdrawal</a>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td height="20"></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <table width="480" border="0" cellpadding="0" cellspacing="0" align="center" class="fullPadding">
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <table width="220" border="0" cellpadding="0" cellspacing="0" align="left" class="col">
+                                                        <tbody>
+                                                            <tr>
+                                                                <td style="font-size: 11px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 1; vertical-align: top;">
+                                                                    <strong>SUPPLIER DETAILS</strong>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td height="10"></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 20px; vertical-align: top;">
+                                                                    {{ supplier.name }}<br>
+                                                                    {{ supplier.address }}<br>
+                                                                    {{ supplier.state }}<br>
+                                                                    GSTIN: {{ supplier.gstin }}<br>
+                                                                    PAN: {{ supplier.pan }}
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 20px; vertical-align: top;">
+                                                                    <strong>Whether tax is payable under reverse charge:</strong> {{ reverse_charge|yesno:"Yes,No" }}
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <table width="220" border="0" cellpadding="0" cellspacing="0" align="right" class="col">
+                                                        <tbody>
+                                                            <tr>
+                                                                <td style="font-size: 11px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 1; vertical-align: top;">
+                                                                    <strong>SHIPPING METHOD</strong>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td height="10"></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 20px; vertical-align: top;">
+                                                                    {{ shipping_method }}
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 20px; vertical-align: top;">
+                                                                    Order Status: <strong>{{ order_status|title }}</strong>
+                                                                    {% if delivered_at %} ({{ delivered_at|date:"d M Y" }}) {% endif %}
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td height="30"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" class="fullTable" bgcolor="#f0f0f0">
+        <tbody>
+            <tr>
+                <td>
+                    <table width="600" border="0" cellpadding="0" cellspacing="0" align="center" class="fullTable" bgcolor="#ffffff" style="border-radius: 0 0 10px 10px;">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <table width="480" border="0" cellpadding="0" cellspacing="0" align="center" class="fullPadding">
+                                        <tbody>
+                                            <tr>
+                                                <td height="15"></td>
+                                            </tr>
+                                            
+                                            <tr>
+                                                <td>
+                                                    <table width="220" border="0" cellpadding="0" cellspacing="0" align="right" class="col">
+                                                        <tbody>
+                                                            <tr>
+                                                                <td align="right">
+                                                                    <img src="{% static "img_asset/signature-min.jpg" %}" width="120" height="50" alt="Authorized Signatory Signature" class="signature-img" style="max-width: 120px; height: auto; filter: grayscale(100%);" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #000000; line-height: 18px; vertical-align: top; text-align: right;">
+                                                                    <strong>Authorized Signatory</strong>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td height="20"></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="font-size: 12px; color: #000000; font-family: 'Open Sans', sans-serif; line-height: 18px; vertical-align: top; text-align: left;">
+                                                    Have a nice day.
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td height="25"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td height="20"></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

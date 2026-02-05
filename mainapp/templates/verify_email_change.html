@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Verify Email Change - Twenty-Five First{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">Verify Your New Email</h2>
+    <div class="card">
+        <div class="card-body">
+            <p>An OTP has been sent to your new email: <strong>{{ pending_email }}</strong>. Please enter it below to verify.</p>
+
+            <form method="POST" action="{% url 'verify_email_change' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="otp" class="form-label">Enter OTP</label>
+                    <input type="text" class="form-control" id="otp" name="otp" required pattern="\d{6}" title="Enter a 6-digit OTP">
+                </div>
+                <button type="submit" class="btn btn-outline-dark" style="border-radius:0px;">Verify Email</button>
+            </form>
+            <p class="mt-3">Didn't receive the OTP? Check your spam folder or request a new one from <a href="{% url 'account_settings' %}">Account Settings</a> after 5 minutes.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

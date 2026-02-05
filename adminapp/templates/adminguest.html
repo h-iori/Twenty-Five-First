@@ -1,0 +1,794 @@
+{% extends "adminbase.html" %}
+{% load static %}
+{% block title %}Admin Panel - Guest Customers{% endblock title %}
+
+{% block content %}
+<head>
+    <style>
+        /* [PORTFOLIO NOTE] Minimalist Admin CSS */
+        :root {
+            --bs-body-bg: #ffffff;
+            --bs-body-color: #000000;
+            --bs-border-radius: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+
+        .main-content {
+            padding-top: 48px;
+            transition: margin-left .3s;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                margin-left: 240px;
+            }
+        }
+        
+        .sort-link {
+            color: #000;
+            text-decoration: none !important;
+        }
+        .sort-link:hover {
+            color: #000;
+            text-decoration: underline !important;
+        }
+
+        .card, .form-control, .btn, .table, .alert, .modal-content, .list-group-item, .dropdown-menu {
+            border-radius: 0 !important;
+            border: 1px solid #000;
+        }
+        
+        .btn-dark {
+            background-color: #000;
+            color: #fff;
+            border-color: #000;
+        }
+        
+        .btn-dark:hover {
+            background-color: #333;
+            border-color: #333;
+        }
+
+        .btn-outline-dark {
+            color: #000;
+            border-color: #000;
+        }
+
+        .btn-outline-dark:hover {
+            background-color: #000;
+            color: #fff;
+        }
+        
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #000;
+        }
+        
+        thead th {
+            border-bottom: 2px solid #000 !important;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        
+        .status-pill {
+            display: inline-block;
+            padding: 0.25em 0.6em;
+            font-size: 75%;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border: 1px solid #000;
+            color: #000;
+            background-color: transparent;
+        }
+        .status-pill.neutral { background-color: #e2e3e5; }
+        
+        .detail-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            margin-bottom: 4px;
+            display: block;
+            font-weight: 700;
+        }
+        .detail-value {
+            font-weight: 500;
+            margin-bottom: 12px;
+            word-wrap: break-word;
+        }
+        .info-card {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef !important;
+            height: 100%;
+        }
+        .load-more-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<div class="container-fluid">
+    <div class="row">
+        <main class="main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-dark">
+                <h1 class="h2">Guest Customer Management</h1>
+            </div>
+
+            {% if messages %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                {% for message in messages %}
+                <div>{{ message }}</div>
+                {% endfor %}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endif %}
+
+            <div class="alert alert-success alert-dismissible fade" role="alert" id="successAlert">
+                <div id="successMessage"></div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-funnel-fill"></i> Filters & Search</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search by Name, Email, Phone, Address, IP..." value="{{ search_query }}">
+                                <button class="btn btn-dark" type="button" id="searchButton"><i class="bi bi-search"></i> Search</button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="stateFilter">
+                                <option value="" {% if not state_filter %}selected{% endif %}>All States</option>
+                                {% for code, name in state_choices %}
+                                <option value="{{ code }}" {% if state_filter == code %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" class="form-control" id="createdAtStartFilter" value="{{ created_at_start }}">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" class="form-control" id="createdAtEndFilter" value="{{ created_at_end }}">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" id="ipFilter" placeholder="Filter by IP Address" value="{{ ip_filter }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-table"></i> Guest Records</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" id="bulkActions" data-bs-toggle="dropdown" aria-expanded="false" disabled>
+                                Bulk Actions
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="bulkActions">
+                                <li><a class="dropdown-item text-danger" href="#" data-action="DELETE">Delete Selected</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="guestTable">
+                            <thead>
+                                <tr>
+                                    <th><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
+                                    <th>ID</th>
+                                    <th>
+                                        <a href="#" class="sort-link" data-sort="{% if sort_by == 'first_name' %}-first_name{% else %}first_name{% endif %}">
+                                            Full Name <i class="bi bi-arrow-down-up"></i>
+                                        </a>
+                                    </th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>City</th>
+                                    <th>
+                                        <a href="#" class="sort-link" data-sort="{% if sort_by == 'state' %}-state{% else %}state{% endif %}">
+                                            State <i class="bi bi-arrow-down-up"></i>
+                                        </a>
+                                    </th>
+                                    <th>
+                                        <a href="#" class="sort-link" data-sort="{% if sort_by == 'created_at' %}-created_at{% else %}created_at{% endif %}">
+                                            Created At <i class="bi bi-arrow-down-up"></i>
+                                        </a>
+                                    </th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="guestTableBody">
+                                {% for guest in page_obj %}
+                                <tr>
+                                    <td><input class="form-check-input row-checkbox" type="checkbox" value="{{ guest.id }}"></td>
+                                    <td>{{ guest.id }}</td>
+                                    <td>{{ guest.first_name }} {{ guest.last_name }}</td>
+                                    <td>{{ guest.email }}</td>
+                                    <td>{{ guest.phone_number }}</td>
+                                    <td>{{ guest.city }}</td>
+                                    <td>{{ guest.state_name }}</td>
+                                    <td>{{ guest.created_at|date:"Y-m-d H:i:s" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-dark view-details" data-guest-id="{{ guest.id }}" data-bs-toggle="modal" data-bs-target="#viewDetailsModal"><i class="bi bi-eye-fill"></i></button>
+                                        <button class="btn btn-sm btn-outline-dark edit-guest" data-guest-id="{{ guest.id }}" data-bs-toggle="modal" data-bs-target="#editGuestModal"><i class="bi bi-pencil-fill"></i></button>
+                                        <button class="btn btn-sm btn-outline-dark delete-guest" data-guest-id="{{ guest.id }}"><i class="bi bi-trash-fill"></i></button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="9" class="text-center">No guest records found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="load-more-container" id="loadMoreContainer">
+                        {% if page_obj.has_next %}
+                        <button class="btn btn-outline-dark" id="loadMoreButton" data-next-page="{{ page_obj.next_page_number }}">Load More</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="viewDetailsModal" tabindex="-1" aria-labelledby="viewDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title" id="viewDetailsModalLabel">Guest Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div class="d-flex justify-content-between align-items-end mb-4 pb-3 border-bottom">
+                    <div>
+                        <h2 class="mb-1 fw-bold" id="detailFullName"></h2>
+                        <div class="text-muted small">
+                            Guest ID: <span id="detailGuestIdDisplay" class="font-monospace"></span>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                         <span class="status-pill neutral">Guest User</span>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="card info-card border-0 h-100">
+                            <div class="card-body">
+                                <h6 class="card-title text-uppercase text-muted fw-bold small mb-3">
+                                    <i class="bi bi-person-lines-fill"></i> Contact & Info
+                                </h6>
+                                <div class="row mb-3">
+                                    <div class="col-12 mb-3">
+                                        <span class="detail-label">Email Address</span>
+                                        <div class="detail-value" id="detailEmail"></div>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="detail-label">Phone Number</span>
+                                        <div class="detail-value" id="detailPhoneNumber"></div>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="detail-label">IP Address</span>
+                                        <div class="detail-value" id="detailIpAddress"></div>
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <span class="detail-label">Created At</span>
+                                        <div class="detail-value" id="detailCreatedAt"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card info-card border-0 h-100">
+                            <div class="card-body">
+                                <h6 class="card-title text-uppercase text-muted fw-bold small mb-3">
+                                    <i class="bi bi-basket2-fill"></i> Order Context & Region
+                                </h6>
+                                <div class="mb-4">
+                                     <span class="detail-label">Associated Order</span>
+                                     <div class="detail-value mt-1">
+                                        <a id="detailOrderNumber" href="#" class="btn btn-sm btn-outline-dark"></a>
+                                     </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                         <span class="detail-label">City</span>
+                                         <div class="detail-value" id="detailCity"></div>
+                                    </div>
+                                    <div class="col-6">
+                                         <span class="detail-label">State</span>
+                                         <div class="detail-value" id="detailState"></div>
+                                    </div>
+                                    <div class="col-6">
+                                         <span class="detail-label">Pincode</span>
+                                         <div class="detail-value" id="detailPincode"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4 border-0">
+                    <div class="card-header bg-transparent border-0 px-0">
+                         <h6 class="text-uppercase text-muted fw-bold small mb-0"><i class="bi bi-geo-alt-fill"></i> Address Details</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 50%">Shipping Address</th>
+                                        <th style="width: 50%">Billing Address</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td id="detailAddress" class="align-top text-break"></td>
+                                        <td id="detailBillingAddress" class="align-top text-break"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end border-top pt-3">
+                     <button class="btn btn-outline-danger delete-guest-btn" id="modalDeleteBtn">Delete Guest</button>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-dark edit-guest" id="editGuestButton" data-bs-toggle="modal" data-bs-target="#editGuestModal">Edit Details</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editGuestModal" tabindex="-1" aria-labelledby="editGuestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold" id="editGuestModalLabel">Edit Guest Record</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <input type="hidden" id="editGuestId">
+                <div class="alert alert-light border mb-3">
+                    Editing Guest ID: <strong id="editGuestIdLabel" class="font-monospace"></strong>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card info-card h-100">
+                            <div class="card-body">
+                                <h6 class="text-uppercase text-muted fw-bold small mb-3">
+                                    <i class="bi bi-person-lines-fill"></i> Contact Details
+                                </h6>
+                                <div class="mb-3">
+                                    <label for="firstNameInput" class="detail-label">First Name</label>
+                                    <input type="text" class="form-control" id="firstNameInput">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="lastNameInput" class="detail-label">Last Name</label>
+                                    <input type="text" class="form-control" id="lastNameInput">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="emailInput" class="detail-label">Email</label>
+                                    <input type="email" class="form-control" id="emailInput">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="phoneNumberInput" class="detail-label">Phone Number</label>
+                                    <input type="text" class="form-control" id="phoneNumberInput">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card info-card h-100">
+                            <div class="card-body">
+                                <h6 class="text-uppercase text-muted fw-bold small mb-3">
+                                    <i class="bi bi-geo-alt-fill"></i> Location Details
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label for="cityInput" class="detail-label">City</label>
+                                        <input type="text" class="form-control" id="cityInput">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="stateSelect" class="detail-label">State</label>
+                                        <select class="form-select" id="stateSelect">
+                                            {% for code, name in state_choices %}
+                                            <option value="{{ code }}">{{ name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="pincodeInput" class="detail-label">Pincode</label>
+                                        <input type="text" class="form-control" id="pincodeInput">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="card info-card">
+                            <div class="card-body">
+                                <h6 class="text-uppercase text-muted fw-bold small mb-3">
+                                    <i class="bi bi-house-door-fill"></i> Addresses
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="addressInput" class="detail-label">Shipping Address</label>
+                                        <textarea class="form-control" id="addressInput" rows="3"></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="billingAddressInput" class="detail-label">Billing Address (Optional)</label>
+                                        <textarea class="form-control" id="billingAddressInput" rows="3"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-dark" id="saveGuestButton">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchButton = document.getElementById('searchButton');
+    const searchInput = document.getElementById('searchInput');
+    const stateFilter = document.getElementById('stateFilter');
+    const createdAtStartFilter = document.getElementById('createdAtStartFilter');
+    const createdAtEndFilter = document.getElementById('createdAtEndFilter');
+    const ipFilter = document.getElementById('ipFilter');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const bulkActionsButton = document.getElementById('bulkActions');
+    const guestTableBody = document.getElementById('guestTableBody');
+    let loadMoreButton = document.getElementById('loadMoreButton');
+    const loadMoreContainer = document.getElementById('loadMoreContainer');
+    const successAlert = document.getElementById('successAlert');
+    const successMessage = document.getElementById('successMessage');
+
+    const viewDetailsModal = new bootstrap.Modal(document.getElementById('viewDetailsModal'));
+    const editGuestModal = new bootstrap.Modal(document.getElementById('editGuestModal'));
+
+    function showSuccessAlert(message) {
+        successAlert.classList.remove('show', 'fade');
+        successAlert.style.display = 'block';
+        successMessage.textContent = message;
+        setTimeout(() => {
+            successAlert.classList.add('show');
+        }, 10);
+        setTimeout(() => {
+            successAlert.classList.remove('show');
+            setTimeout(() => {
+                successAlert.style.display = 'none';
+            }, 150);
+        }, 3000);
+    }
+
+    function updateQueryString() {
+        const params = new URLSearchParams();
+        if (searchInput.value) params.set('search', searchInput.value);
+        if (stateFilter.value) params.set('state', stateFilter.value);
+        if (createdAtStartFilter.value) params.set('created_at_start', createdAtStartFilter.value);
+        if (createdAtEndFilter.value) params.set('created_at_end', createdAtEndFilter.value);
+        if (ipFilter.value) params.set('ip', ipFilter.value);
+        params.set('sort_by', new URLSearchParams(window.location.search).get('sort_by') || '-created_at');
+        params.set('page', 1);
+        window.history.replaceState({}, '', 'hidden');
+        fetchData(1, true);
+    }
+
+    function fetchData(page, replace = false) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', page);
+        fetch('hidden', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const newTableBody = doc.getElementById('guestTableBody').innerHTML;
+            const newTableHead = doc.querySelector('thead').innerHTML;
+            const newLoadMoreContainer = doc.querySelector('.load-more-container');
+            
+            if (replace) {
+                guestTableBody.innerHTML = newTableBody;
+                document.querySelector('thead').innerHTML = newTableHead;
+            } else {
+                guestTableBody.insertAdjacentHTML('beforeend', newTableBody);
+            }
+            
+            if (newLoadMoreContainer) {
+                 loadMoreContainer.innerHTML = newLoadMoreContainer.innerHTML;
+            } else {
+                 loadMoreContainer.innerHTML = '';
+            }
+
+            loadMoreButton = document.getElementById('loadMoreButton');
+            if (loadMoreButton) {
+                loadMoreButton.addEventListener('click', () => {
+                    const nextPage = loadMoreButton.getAttribute('data-next-page');
+                    fetchData(nextPage, false);
+                });
+            }
+            attachEventListeners();
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    }
+
+    function handleSortClick(e) {
+        e.preventDefault();
+        const sortBy = e.currentTarget.getAttribute('data-sort');
+        const params = new URLSearchParams(window.location.search);
+        params.set('sort_by', sortBy);
+        window.history.replaceState({}, '', 'hidden');
+        fetchData(1, true);
+    }
+
+    function attachEventListeners() {
+        document.querySelectorAll('.view-details').forEach(button => {
+            button.removeEventListener('click', handleViewDetails);
+            button.addEventListener('click', handleViewDetails);
+        });
+
+        document.querySelectorAll('.edit-guest').forEach(button => {
+            button.removeEventListener('click', handleEditGuest);
+            button.addEventListener('click', handleEditGuest);
+        });
+
+        document.querySelectorAll('.delete-guest').forEach(button => {
+            button.removeEventListener('click', handleDeleteGuest);
+            button.addEventListener('click', handleDeleteGuest);
+        });
+
+        document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+            checkbox.removeEventListener('change', updateBulkActionsState);
+            checkbox.addEventListener('change', updateBulkActionsState);
+        });
+
+        document.querySelectorAll('.sort-link').forEach(link => {
+            link.removeEventListener('click', handleSortClick);
+            link.addEventListener('click', handleSortClick);
+        });
+        
+        const newSelectAll = document.getElementById('selectAllCheckbox');
+        if(newSelectAll) {
+             newSelectAll.removeEventListener('change', handleSelectAll);
+             newSelectAll.addEventListener('change', handleSelectAll);
+        }
+    }
+
+    function handleSelectAll() {
+        document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateBulkActionsState();
+    }
+
+    function handleViewDetails() {
+        const guestId = this.getAttribute('data-guest-id');
+        fetch('hidden', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('detailGuestIdDisplay').textContent = data.data.id || 'N/A';
+                document.getElementById('detailFullName').textContent = data.data.full_name || 'N/A';
+                document.getElementById('detailEmail').textContent = data.data.email || 'N/A';
+                document.getElementById('detailPhoneNumber').textContent = data.data.phone_number || 'N/A';
+                document.getElementById('detailIpAddress').textContent = data.data.ip_address || 'N/A';
+                document.getElementById('detailCreatedAt').textContent = data.data.created_at || 'N/A';
+                
+                document.getElementById('detailCity').textContent = data.data.city || '-';
+                document.getElementById('detailState').textContent = data.data.state_name || '-';
+                document.getElementById('detailPincode').textContent = data.data.pincode || '-';
+                
+                document.getElementById('detailAddress').textContent = data.data.address || 'No shipping address provided';
+                document.getElementById('detailBillingAddress').textContent = data.data.billing_address || 'Same as shipping / Not provided';
+
+                const orderLink = document.getElementById('detailOrderNumber');
+                if (data.data.order_number && data.data.order_number !== 'N/A') {
+                    orderLink.textContent = `Order #${data.data.order_number}`;
+                    orderLink.href = '#';
+                    orderLink.classList.remove('disabled', 'btn-outline-secondary');
+                    orderLink.classList.add('btn-outline-dark');
+                } else {
+                    orderLink.textContent = 'No Associated Order';
+                    orderLink.href = '#';
+                    orderLink.classList.remove('btn-outline-dark');
+                    orderLink.classList.add('btn-outline-secondary', 'disabled');
+                }
+
+                document.getElementById('editGuestButton').setAttribute('data-guest-id', data.data.id);
+                
+                const deleteBtn = document.getElementById('modalDeleteBtn');
+                deleteBtn.setAttribute('data-guest-id', data.data.id);
+                deleteBtn.onclick = function() {
+                    const dummy = document.createElement('div');
+                    dummy.setAttribute('data-guest-id', data.data.id);
+                    handleDeleteGuest.call(dummy);
+                    viewDetailsModal.hide();
+                };
+
+            } else {
+                console.error('Error in response:', data.error);
+                document.getElementById('detailFullName').textContent = 'Error: ' + (data.error || 'Unknown error');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching details:', error);
+            document.getElementById('detailFullName').textContent = 'Failed to load guest details';
+        });
+    }
+
+    function handleEditGuest() {
+        const guestId = this.getAttribute('data-guest-id');
+        document.getElementById('editGuestId').value = guestId;
+        document.getElementById('editGuestIdLabel').textContent = guestId;
+        
+        fetch('hidden', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('firstNameInput').value = data.data.first_name || '';
+                document.getElementById('lastNameInput').value = data.data.last_name || '';
+                document.getElementById('emailInput').value = data.data.email || '';
+                document.getElementById('phoneNumberInput').value = data.data.phone_number || '';
+                document.getElementById('addressInput').value = data.data.address || '';
+                document.getElementById('cityInput').value = data.data.city || '';
+                document.getElementById('stateSelect').value = data.data.state || '';
+                document.getElementById('pincodeInput').value = data.data.pincode || '';
+                document.getElementById('billingAddressInput').value = (data.data.billing_address === 'N/A') ? '' : data.data.billing_address;
+            }
+        })
+        .catch(error => console.error('Error fetching guest details for edit:', error));
+    }
+
+    function handleDeleteGuest() {
+        const guestId = this.getAttribute('data-guest-id');
+        if (confirm(`Are you sure you want to delete guest record ${guestId}? This action cannot be undone.`)) {
+            fetch('hidden', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ guest_ids: [guestId], action: 'DELETE' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessAlert(`Guest record ${guestId} deleted successfully`);
+                    fetchData(1, true);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error deleting guest:', error));
+        }
+    }
+
+    function updateBulkActionsState() {
+        bulkActionsButton.disabled = !document.querySelectorAll('.row-checkbox:checked').length;
+    }
+
+    searchButton.addEventListener('click', () => updateQueryString());
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') updateQueryString();
+    });
+    stateFilter.addEventListener('change', () => updateQueryString());
+    createdAtStartFilter.addEventListener('change', () => updateQueryString());
+    createdAtEndFilter.addEventListener('change', () => updateQueryString());
+    ipFilter.addEventListener('change', () => updateQueryString());
+
+    selectAllCheckbox.addEventListener('change', handleSelectAll);
+
+    document.querySelectorAll('.dropdown-item[data-action]').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const action = this.getAttribute('data-action');
+            const guestIds = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+            if (guestIds.length && confirm(`Are you sure you want to delete ${guestIds.length} guest record(s)?`)) {
+                fetch('hidden', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ guest_ids: guestIds, action: action })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccessAlert(`${guestIds.length} guest record(s) deleted successfully`);
+                        fetchData(1, true);
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => console.error('Error performing bulk action:', error));
+            }
+        });
+    });
+
+    document.getElementById('saveGuestButton').addEventListener('click', function() {
+        const guestId = document.getElementById('editGuestId').value;
+        const guestData = {
+            guest_id: guestId,
+            first_name: document.getElementById('firstNameInput').value,
+            last_name: document.getElementById('lastNameInput').value,
+            email: document.getElementById('emailInput').value,
+            phone_number: document.getElementById('phoneNumberInput').value,
+            address: document.getElementById('addressInput').value,
+            city: document.getElementById('cityInput').value,
+            state: document.getElementById('stateSelect').value,
+            pincode: document.getElementById('pincodeInput').value,
+            billing_address: document.getElementById('billingAddressInput').value
+        };
+        fetch('hidden', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(guestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessAlert(`Guest record ${guestId} updated successfully`);
+                editGuestModal.hide();
+                fetchData(1, true);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => console.error('Error updating guest:', error));
+    });
+
+    if (loadMoreButton) {
+        loadMoreButton.addEventListener('click', () => {
+            const nextPage = loadMoreButton.getAttribute('data-next-page');
+            fetchData(nextPage, false);
+        });
+    }
+
+    attachEventListeners();
+});
+</script>
+{% endblock content %}

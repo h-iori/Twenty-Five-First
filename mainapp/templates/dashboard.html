@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_styles %}
+<style>
+    main {
+        margin-top: 80px;
+    }
+
+    .popup-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .popup-content {
+        background-color: #fff;
+        padding: 20px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .popup-content h3 {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 700;
+        font-size: 20px;
+        color: rgb(0, 0, 0);
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .popup-content p {
+        font-family: 'Garamond', serif;
+        font-size: 16px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .browsing-history-container {
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 15px;
+        position: relative;
+    }
+
+    .history-item {
+        display: flex;
+        align-items: center;
+        min-height: 100px;
+    }
+
+    .cart-item-img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+    }
+
+    .end-message {
+        font-size: 16px;
+        color: #424242;
+        margin: 10px 0;
+        display: none;
+    }
+
+    @media (max-width: 576px) {
+        .popup-content {
+            padding: 15px;
+            max-width: 90%;
+        }
+
+    }
+</style>
+{% endblock extra_styles %}
+
+{% block title %}User Dashboard - Twenty-Five First{% endblock %}
+
+{% block content %}
+<main>
+    <div class="container my-5">
+        <h2 class="mb-4">Welcome, {{ request.user.first_name|default:request.user.username|capfirst }}</h2>
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="list-group" style="top: 20px; margin-bottom: 20px;">
+                    <a href="{% url 'user_dashboard' %}" class="list-group-item list-group-item-action active">Dashboard</a>
+                    <a href="{% url 'user_orders' %}" class="list-group-item list-group-item-action">My Orders</a>
+                    <a href="{% url 'wishlist' %}" class="list-group-item list-group-item-action">Wishlist</a>
+                    <a href="{% url 'addresses' %}" class="list-group-item list-group-item-action">Address Book</a>
+                    <a href="{% url 'account_settings' %}" class="list-group-item list-group-item-action">Account Settings</a>
+                    <a href="{% url 'reviews' %}" class="list-group-item list-group-item-action">Reviews</a>
+                    <a href="{% url 'support' %}" class="list-group-item list-group-item-action">Support</a>
+                    <a href="" class="list-group-item list-group-item-action text-danger" id="logoutLink">Logout</a>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Recent Orders</h5>
+                                <p class="card-text">{{ orders.count }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Spending</h5>
+                                <p class="card-text">₹{{ total_spending|floatformat:2 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Pending Payments</h5>
+                                <p class="card-text">{{ pending_payments.count }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">Latest Order</div>
+                    <div class="card-body">
+                        {% if latest_order %}
+                        <p>Order #{{ latest_order.order_number }} - {{ latest_order.status }} (Placed on {{ latest_order.created_at|date:"d M Y" }})</p>
+                        <a href="{% url 'user_orders' %}" class="btn btn-outline-dark" style="border-radius:0px;">View All Orders</a>
+                        {% else %}
+                        <p>No orders yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">Wishlist</div>
+                    <div class="card-body">
+                        {% for item in wishlist|slice:":3" %}
+                        <div class="d-flex mb-2 border-bottom pb-3">
+                            {% with primary_media=item.variant.color_variant.media.filter|first %}
+                            <img src="{{ primary_media.media_file.url }}" alt="{{ item.variant.color_variant.shirt.name }}" class="cart-item-img">
+                            {% endwith %}
+                            <div class="ms-3">
+                                <p>{{ item.variant.color_variant.shirt.name }}</p>
+                                <p>₹{{ item.variant.price }}</p>
+                                <a href="{% url 'wishlist' %}" class="btn btn-outline-dark" style="border-radius:0px;">View Wishlist</a>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p>Your wishlist is empty.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">Recently Viewed</div>
+                    <div class="card-body browsing-history-container" style="max-height: 400px; overflow-y: auto; padding: 15px;">
+                        <div id="browsing-history-items">
+                            {% for history in browsing_history|slice:":5" %}
+                            <div class="d-flex mb-2 border-bottom pb-3 history-item">
+                                {% with primary_media=history.variant.color_variant.media.filter|first %}
+                                <img src="{{ primary_media.media_file.url|default:'/static/img/default-shirt.jpg' }}"
+                                     alt="{{ history.variant.color_variant.shirt.name }}"
+                                     class="cart-item-img"
+                                     style="width: 80px; height: 80px; object-fit: cover;">
+                                {% endwith %}
+                                <div class="ms-3">
+                                    <p>
+                                        <a href="{% url 'product_detail' history.variant.color_variant.slug %}"
+                                           style="color: #cb4242; text-decoration: none;">
+                                            {{ history.variant.color_variant.shirt.name }}
+                                            ({{ history.variant.color_variant.color.name }}, {{ history.variant.size.name }})
+                                        </a>
+                                    </p>
+                                    <p>Viewed {{ history.view_count }} time(s) on {{ history.viewed_at|date:"d M Y, g:i a" }}</p>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p id="no-history">No recent browsing history.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <button id="load-more-history" class="btn btn-outline-dark" style="border-radius: 0px;">Load More</button>
+                        <p id="end-message" class="end-message" style="display: none; margin: 10px 0; color: #424242;">No more history to load</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Special Offers</div>
+                    <div class="card-body">
+                        <p>Get 10% off your next order! Use code: <strong>WELCOME10</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="popup-overlay" id="logoutPopup">
+        <div class="popup-content">
+            <h3>Confirm Logout</h3>
+            <p>Oh no! You are Logging Out.... Are You Sure?</p>
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-outline-dark btn-sm" style="border-radius: 0px;" id="cancelLogout">Nah, Just Kidding</button>
+                <form method="POST" action="{% url 'logout_all' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger btn-sm" style="border-radius: 0px;">Yes, Log Me Out</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const logoutLink = document.getElementById('logoutLink');
+        const logoutPopup = document.getElementById('logoutPopup');
+        const confirmLogout = document.getElementById('confirmLogout');
+        const cancelLogout = document.getElementById('cancelLogout');
+
+        logoutLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            logoutPopup.style.display = 'flex';
+        });
+
+        cancelLogout.addEventListener('click', function() {
+            logoutPopup.style.display = 'none';
+        });
+
+        confirmLogout.addEventListener('click', function() {
+            fetch("{% url 'logout_all' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        showGlobalAlert('An error occurred. Please try again.', 'error');
+                    }
+                })
+                .catch(error => {
+                    showGlobalAlert('An error occurred. Please try again.', 'error');
+                });
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const loadMoreBtn = document.getElementById('load-more-history');
+        const historyContainer = document.getElementById('browsing-history-items');
+        const endMessage = document.getElementById('end-message');
+        let page = 2;
+
+        const productDetailBaseUrl = "{% url 'product_detail' 'placeholder' %}".replace('placeholder/', '');
+
+        loadMoreBtn.addEventListener('click', function() {
+            fetch(`/api/browsing-history/?page=${page}`, {
+                    credentials: 'include',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 404 || response.status === 200) return {
+                            results: [],
+                            has_next: false
+                        };
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.results && data.results.length > 0) {
+                        const noHistoryMsg = document.getElementById('no-history');
+                        if (noHistoryMsg) noHistoryMsg.remove();
+
+                        data.results.forEach(item => {
+                            const historyItem = document.createElement('div');
+                            historyItem.className = 'd-flex mb-2 border-bottom pb-3 history-item';
+
+
+                            historyItem.innerHTML = `
+                        <img src="${item.primary_media_url}"
+                             alt="${item.shirt_name}"
+                             class="cart-item-img"
+                             style="width: 80px; height: 80px; object-fit: cover;">
+                        <div class="ms-3">
+                            <p>
+                                <a href="${productDetailBaseUrl}${item.shirt_slug}/"
+                                   style="color: #cb4242; text-decoration: none;">
+                                    ${item.shirt_name} (${item.color_name}, ${item.size_name})
+                                </a>
+                            </p>
+                            <p>Viewed ${item.view_count} time(s) on ${item.viewed_at}</p>
+                        </div>
+                    `;
+                            historyContainer.appendChild(historyItem);
+                        });
+
+                        page++;
+
+                        if (!data.has_next) {
+                            loadMoreBtn.style.display = 'none';
+                            endMessage.style.display = 'block';
+                        }
+                    } else {
+                        loadMoreBtn.style.display = 'none';
+                        endMessage.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    loadMoreBtn.textContent = 'Error Loading History';
+                    loadMoreBtn.disabled = true;
+                });
+        });
+    });
+</script>
+{% endblock %}

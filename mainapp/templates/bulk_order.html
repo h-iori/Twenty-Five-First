@@ -1,0 +1,426 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bulk Order & Corporate Enquiries | Twenty-Five First{% endblock title %}
+
+{% block meta_description %}Looking for wholesale men's shirts or corporate uniforms? Get the best rates on bulk orders for formal and casual shirts. Contact us for custom quotes.{% endblock meta_description %}
+
+{% block meta_keywords %}
+bulk shirt order india, corporate uniform suppliers, wholesale mens shirts, b2b shirt supplier, custom shirt orders, bulk buy discounts,
+shirt manufacturers in mumbai, wholesale clothing distributors, business enquiry twenty five first
+{% endblock meta_keywords %}
+
+{% block extra_styles %}
+<style>
+    main {
+        margin-top: 100px;
+    }
+
+    .bulk-order-container {
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 30px;
+        background-color: #fff;
+        border-radius: 0;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        font-family: 'Garamond', serif;
+    }
+
+    .bulk-order-container h1 {
+        font-family: 'Roboto', serif;
+        font-weight: 300;
+        color: #000;
+        font-size: 32px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 16px;
+        color: #333;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 0;
+        font-size: 16px;
+        font-family: 'Garamond', serif;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #000;
+    }
+
+    .contact-method {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .contact-method input[type="radio"] {
+        margin-right: 8px;
+    }
+
+    .contact-method label {
+        font-size: 16px;
+        color: #333;
+        cursor: pointer;
+    }
+
+    .contact-detail {
+        display: none;
+    }
+
+    .contact-detail.active {
+        display: block;
+    }
+
+    .form-button {
+        padding: 12px 30px;
+        background-color: #ffffff;
+        color: #000000;
+        border: 1px solid black;
+        border-radius: 0;
+        font-family: 'Roboto', serif;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    .form-button:hover {
+        background-color: #020101;
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .form-button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .loading-content {
+        background: #fff;
+        padding: 20px;
+        border-radius: 0;
+        text-align: center;
+        font-family: 'Roboto', serif;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        min-width: 200px;
+    }
+
+    .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #000;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .success-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .success-content {
+        background: #fff;
+        padding: 20px;
+        border-radius: 0;
+        text-align: center;
+        font-family: 'Roboto', serif;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        min-width: 200px;
+        max-width: 90%;
+    }
+
+    .g-recaptcha {
+        margin: 20px 0;
+        display: flex;
+        justify-content: center;
+    }
+
+    @media (max-width: 767px) {
+        .bulk-order-container {
+            margin: 20px 10px;
+            padding: 20px;
+        }
+
+        .bulk-order-container h1 {
+            font-size: 24px;
+        }
+
+        .form-group label,
+        .form-group input,
+        .form-group textarea {
+            font-size: 14px;
+        }
+
+        .form-button {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        .contact-method {
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .bulk-order-container {
+            margin: 15px 5px;
+            padding: 15px;
+        }
+
+        .bulk-order-container h1 {
+            font-size: 20px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            font-size: 12px;
+            padding: 8px;
+        }
+
+        .contact-method label {
+            font-size: 12px;
+        }
+
+        .form-button {
+            padding: 8px 15px;
+            font-size: 12px;
+        }
+
+        .loading-content,
+        .success-content {
+            padding: 15px;
+            min-width: 150px;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+        }
+    }
+</style>
+{% endblock extra_styles %}
+
+{% block content %}
+<main>
+    <div class="bulk-order-container">
+        <h1>Let’s Craft Your Bulk Order – Our Team Will Reach Out!</h1>
+
+        <form method="POST" id="bulkOrderForm" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="fullName">Your Full Name</label>
+                <input type="text" id="fullName" name="fullName" required placeholder="Enter your full name" aria-label="Your full name">
+            </div>
+
+            <div class="form-group">
+                <label>Preferred Contact Method</label>
+                <div class="contact-method">
+                    <label><input type="radio" name="contactMethod" value="email" checked> Email</label>
+                    <label><input type="radio" name="contactMethod" value="phone"> Phone Call</label>
+                    <label><input type="radio" name="contactMethod" value="whatsapp"> WhatsApp</label>
+                </div>
+            </div>
+
+            <div class="form-group contact-detail" id="emailField">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required placeholder="Enter your email" aria-label="Email address">
+            </div>
+
+            <div class="form-group contact-detail" id="phoneField" style="display: none;">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" required placeholder="1234567890" maxlength="10" pattern="[6-9][0-9]{9}" aria-label="Phone number" inputmode="numeric">
+            </div>
+
+            <div class="form-group">
+                <label for="message">Message (Optional)</label>
+                <textarea id="message" name="message" placeholder="Let us know what you’re looking for (quantities, products, deadlines, etc.)" rows="4" aria-label="Optional message"></textarea>
+            </div>
+
+            <div class="g-recaptcha" data-sitekey="{{ recaptcha_public_key }}"></div>
+
+            <button type="submit" class="form-button" id="submitButton">Submit</button>
+        </form>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay" aria-hidden="true">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Submitting your request...</p>
+        </div>
+    </div>
+
+    <div class="success-modal" id="successModal" aria-hidden="true">
+        <div class="success-content">
+            <h2>Success!</h2>
+            <p>Your bulk order request has been submitted. Your ticket ID is <strong id="ticketId"></strong>.</p>
+            <p>Redirecting to homepage...</p>
+        </div>
+    </div>
+</main>
+{% endblock content %}
+
+{% block extra_scripts %}
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "name": "Bulk Shirt Ordering Service",
+        "provider": {
+            "@type": "Organization",
+            "name": "Twenty-Five First"
+        },
+        "serviceType": "Wholesale Clothing Supply",
+        "areaServed": {
+            "@type": "Country",
+            "name": "India"
+        },
+        "description": "Premium bulk order and corporate uniform services for shirts."
+    }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('bulkOrderForm');
+        const submitButton = document.getElementById('submitButton');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const successModal = document.getElementById('successModal');
+        const ticketIdElement = document.getElementById('ticketId');
+        const contactMethodRadios = document.getElementsByName('contactMethod');
+        const emailField = document.getElementById('emailField');
+        const phoneField = document.getElementById('phoneField');
+        const emailInput = document.getElementById('email');
+        const phoneInput = document.getElementById('phone');
+
+        function updateContactFields() {
+            const selectedMethod = document.querySelector('input[name="contactMethod"]:checked').value;
+            if (selectedMethod === 'email') {
+                emailField.classList.add('active');
+                emailField.style.display = 'block';
+                phoneField.classList.remove('active');
+                phoneField.style.display = 'none';
+                emailInput.required = true;
+                phoneInput.required = false;
+                phoneInput.value = '';
+            } else {
+                emailField.classList.remove('active');
+                emailField.style.display = 'none';
+                phoneField.classList.add('active');
+                phoneField.style.display = 'block';
+                emailInput.required = false;
+                phoneInput.required = true;
+                emailInput.value = '';
+            }
+        }
+
+        phoneInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            if (this.value.length > 10) {
+                this.value = this.value.slice(0, 10);
+            }
+        });
+
+        updateContactFields();
+
+        for (let radio of contactMethodRadios) {
+            radio.addEventListener('change', updateContactFields);
+        }
+
+        form.addEventListener('submit', function(e) {
+            const fullName = document.getElementById('fullName').value.trim();
+            if (!fullName) {
+                e.preventDefault();
+                showGlobalAlert('Full name is required.', 'error');
+                submitButton.disabled = false;
+                return;
+            }
+
+            const selectedMethod = document.querySelector('input[name="contactMethod"]:checked').value;
+            if (selectedMethod === 'email' && !emailInput.value.trim()) {
+                e.preventDefault();
+                showGlobalAlert('Email is required when Email is selected.', 'error');
+                submitButton.disabled = false;
+                return;
+            } else if (selectedMethod !== 'email' && !phoneInput.value.trim()) {
+                e.preventDefault();
+                showGlobalAlert('Phone number is required when Phone or WhatsApp is selected.', 'error');
+                submitButton.disabled = false;
+                return;
+            }
+
+            submitButton.disabled = true;
+            loadingOverlay.style.display = 'flex';
+        });
+
+        {% if show_success %}
+        ticketIdElement.textContent = '{{ ticket_id }}';
+        successModal.style.display = 'flex';
+        setTimeout(function() {
+            window.location.href = "{% url 'home' %}";
+        }, 3000);
+        {% endif %}
+    });
+</script>
+{% endblock extra_scripts %}

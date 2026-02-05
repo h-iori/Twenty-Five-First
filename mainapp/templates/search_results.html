@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_styles %}
+<style>
+    main {
+        padding-top: 80px;
+    }
+</style>
+{% endblock %}
+
+{% block title %}Search Results - Twenty-Five First{% endblock %}
+
+{% block content %}
+<main>
+    <div class="search-results-container">
+        <h1 align="center" style="color: black; margin-bottom: 20px; font-family: 'Roboto', sans-serif; font-weight: 100;">
+            Search Results for "{{ search_query|default:'All Products' }}"
+        </h1>
+
+        <button class="filter-toggle-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterSidebar" aria-controls="filterSidebar">
+            Filter Results
+        </button>
+
+        <div class="offcanvas offcanvas-start" tabindex="-1" id="filterSidebar" aria-labelledby="filterSidebarLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="filterSidebarLabel">Filters</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+                <form id="filterForm" method="GET" action="{% url 'search_products' %}">
+                    <input type="hidden" name="q" value="{{ search_query }}">
+
+                    <div class="filter-group">
+                        <label>Shirt Type</label>
+                        <select name="type" class="form-select">
+                            <option value="all" {% if filters.type == 'all' %}selected{% endif %}>All Types</option>
+                            {% for type in shirt_types %}
+                            <option value="{{ type.name }}" {% if filters.type == type.name %}selected{% endif %}>{{ type.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Pattern</label>
+                        <select name="pattern" class="form-select">
+                            <option value="all" {% if filters.pattern == 'all' %}selected{% endif %}>All Patterns</option>
+                            {% for pattern in patterns %}
+                            <option value="{{ pattern.name }}" {% if filters.pattern == pattern.name %}selected{% endif %}>{{ pattern.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Material</label>
+                        <select name="material" class="form-select">
+                            <option value="all" {% if filters.material == 'all' %}selected{% endif %}>All Materials</option>
+                            {% for material in materials %}
+                            <option value="{{ material.name }}" {% if filters.material == material.name %}selected{% endif %}>{{ material.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Color</label>
+                        <select name="color" class="form-select">
+                            <option value="all" {% if filters.color == 'all' %}selected{% endif %}>All Colors</option>
+                            {% for color in colors %}
+                            <option value="{{ color.name }}" {% if filters.color == color.name %}selected{% endif %}>{{ color.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Size</label>
+                        <select name="size" class="form-select">
+                            <option value="all" {% if filters.size == 'all' %}selected{% endif %}>All Sizes</option>
+                            {% for size in sizes %}
+                            <option value="{{ size.name }}" {% if filters.size == size.name %}selected{% endif %}>{{ size.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Price Range</label>
+                        <select name="price" class="form-select">
+                            <option value="all" {% if filters.price == 'all' %}selected{% endif %}>All Prices</option>
+                            <option value="0-500" {% if filters.price == '0-500' %}selected{% endif %}>₹0 - ₹500</option>
+                            <option value="500-1000" {% if filters.price == '500-1000' %}selected{% endif %}>₹500 - ₹1000</option>
+                            <option value="1000+" {% if filters.price == '1000+' %}selected{% endif %}>₹1000+</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Sort By</label>
+                        <select name="sort" class="form-select">
+                            <option value="relevance" {% if filters.sort == 'relevance' %}selected{% endif %}>Relevance</option>
+                            <option value="price_low" {% if filters.sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                            <option value="price_high" {% if filters.sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                            <option value="newest" {% if filters.sort == 'newest' %}selected{% endif %}>Newest First</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="offcanvas-footer">
+                <button class="reset-btn btn btn-outline-danger" style="border-radius: 0px; padding: 5px 15px; margin-left: 10px;" onclick="resetFilters()">Reset Filters</button>
+                <button class="apply-btn btn btn-outline-dark" style="border-radius: 0px; padding: 5px 15px; margin-left: 10px;" onclick="document.getElementById('filterForm').submit()">Apply Filters</button>
+            </div>
+        </div>
+
+        <div class="products-grid" id="products-grid">
+            {% for product in products %}
+            <a href="{% url 'product_detail' product.slug %}" class="product-card">
+                <img src="{{ product.image_url }}" class="product-image" alt="{{ product.name }}" loading="lazy">
+                {% if product.total_stock == 0 %}
+                <span class="badge bg-danger" style="position:absolute;z-index:2;">Out of Stock</span>
+                {% endif %}
+                <div class="product-info">
+                    <h3 class="product-title">{{ product.name|safe }}</h3>
+                    <p class="product-price">₹{{ product.price }}</p>
+                </div>
+            </a>
+            {% empty %}
+            <p class="no-results">No results match your filters.</p>
+            {% endfor %}
+        </div>
+
+        <div class="load-more-container">
+            <button id="load-more-btn" class="btn btn-dark custom-button">Load More</button>
+        </div>
+        <div id="end-message" class="end-message">You Have Reached The End :)</div>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let page = 1;
+    const productsGrid = document.getElementById('products-grid');
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    const endMessage = document.getElementById('end-message');
+    const productDetailBaseUrl = "{% url 'product_detail' 'placeholder' %}".replace('/placeholder/', '');
+
+
+    const filters = {
+        q: "{{ search_query|escapejs }}",
+        type: "{{ filters.type|escapejs }}",
+        pattern: "{{ filters.pattern|escapejs }}",
+        material: "{{ filters.material|escapejs }}",
+        color: "{{ filters.color|escapejs }}",
+        size: "{{ filters.size|escapejs }}",
+        price: "{{ filters.price|escapejs }}",
+        sort: "{{ filters.sort|escapejs }}"
+    };
+
+    function resetFilters() {
+        const form = document.getElementById('filterForm');
+        form.querySelectorAll('select').forEach(select => select.value = 'all');
+        form.submit();
+    }
+
+    loadMoreBtn.addEventListener('click', function() {
+        page++;
+        const queryString = new URLSearchParams(filters).toString() + `&page=${page}`;
+        fetch(`/api/search-products/?${queryString}`, {
+                credentials: 'include'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 404 || response.status === 204) return {
+                        results: []
+                    };
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.results && data.results.length > 0) {
+                    data.results.forEach(shirt => {
+                        const productCard = document.createElement('a');
+                        productCard.className = 'product-card';
+                        productCard.href = productDetailBaseUrl +'/'+shirt.slug;
+                        const outOfStockBadge = shirt.total_stock === 0 ?
+                            `<span class="badge bg-danger" 
+                            style="position:absolute;z-index:2;">
+                      Out of Stock
+                    </span>` :
+                            '';
+                        productCard.innerHTML = `
+                        <img src="${shirt.primary_media_url || '/static/img/default-shirt.jpg'}" 
+                             class="product-image" 
+                             alt="${shirt.name}" 
+                             loading="lazy">
+                             ${outOfStockBadge}
+                        <div class="product-info">
+                            <h3 class="product-title">${shirt.name}</h3>
+                            <p class="product-price">₹${shirt.base_price}</p>
+                        </div>
+                    `;
+                        productsGrid.appendChild(productCard);
+                    });
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                    endMessage.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                loadMoreBtn.textContent = 'Error Loading Products';
+                loadMoreBtn.disabled = true;
+            });
+    });
+</script>
+{% endblock %}

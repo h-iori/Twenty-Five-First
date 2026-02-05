@@ -1,0 +1,286 @@
+{% extends "adminbase.html" %}
+{% load static %}
+{% block title %}Admin Panel - Customers{% endblock title %}
+
+{% block content %}
+<head>
+    <style>
+        /* [PORTFOLIO NOTE] Minimalist Admin CSS */
+        :root {
+            --bs-body-bg: #ffffff;
+            --bs-body-color: #000000;
+            --bs-border-radius: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+        .main-content {
+            padding-top: 48px;
+            transition: margin-left .3s;
+        }
+        @media (min-width: 768px) {
+            .main-content { margin-left: 240px; }
+        }
+        .card, .form-control, .btn, .table, .alert, .modal-content {
+            border-radius: 0 !important;
+            border: 1px solid #000;
+        }
+        .btn-dark { background-color: #000; color: #fff; border-color: #000; }
+        .btn-dark:hover { background-color: #333; border-color: #333; }
+        .status-pill {
+            display: inline-block;
+            padding: 0.25em 0.6em;
+            font-size: 75%;
+            font-weight: 700;
+            border: 1px solid #000;
+            background-color: transparent;
+        }
+        .status-pill.active { background-color: #d4edda; }
+        .status-pill.banned { background-color: #343a40; color: #fff; }
+        .info-card { background-color: #f8f9fa; border: 1px solid #e9ecef !important; }
+    </style>
+</head>
+
+<div class="container-fluid">
+    <div class="row">
+        <main class="main-content col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-dark">
+                <h1 class="h2">Customer Management</h1>
+            </div>
+
+            <div class="alert alert-success alert-dismissible fade" role="alert" id="successAlert">
+                <div id="successMessage"></div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0"><i class="bi bi-funnel-fill"></i> Filters & Search</h5></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search by Name, Email, Phone..." value="{{ search_query }}">
+                                <button class="btn btn-dark" type="button" id="searchButton">Search</button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="verifiedFilter">
+                                <option value="" {% if not verified_filter %}selected{% endif %}>All Verification</option>
+                                <option value="true">Verified</option>
+                                <option value="false">Not Verified</option>
+                            </select>
+                        </div>
+                        </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-table"></i> All Customers</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" id="bulkActions" data-bs-toggle="dropdown" disabled>Bulk Actions</button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" data-action="BAN">Ban Selected</a></li>
+                            <li><a class="dropdown-item" href="#" data-action="UNBAN">Unban Selected</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" data-action="DELETE">Delete Selected</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="customerTable">
+                            <thead>
+                                <tr>
+                                    <th><input class="form-check-input" type="checkbox" id="selectAllCheckbox"></th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Verified</th>
+                                    <th>Status</th>
+                                    <th>Joined</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customerTableBody">
+                                {% for customer in page_obj %}
+                                <tr>
+                                    <td><input class="form-check-input row-checkbox" type="checkbox" value="{{ customer.id }}"></td>
+                                    <td class="fw-bold">{{ customer.get_full_name|default:customer.username }}</td>
+                                    <td>{{ customer.email }}</td>
+                                    <td>{{ customer.profile.phone_number|default:'-' }}</td>
+                                    <td><span class="status-pill {{ customer.profile.is_verified|yesno:'active,neutral' }}">{{ customer.profile.is_verified|yesno:"Yes,No" }}</span></td>
+                                    <td><span class="status-pill {{ customer.profile.is_ban|yesno:'banned,active' }}">{{ customer.profile.is_ban|yesno:"Banned,Active" }}</span></td>
+                                    <td>{{ customer.profile.created_at|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-dark view-details" data-customer-id="{{ customer.id }}" data-bs-toggle="modal" data-bs-target="#viewCustomerModal"><i class="bi bi-eye-fill"></i></button>
+                                        <button class="btn btn-sm btn-outline-dark edit-customer" data-customer-id="{{ customer.id }}" data-bs-toggle="modal" data-bs-target="#editCustomerModal"><i class="bi bi-pencil-fill"></i></button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="8" class="text-center">No customers found</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="load-more-container" id="loadMoreContainer">
+                        {% if page_obj.has_next %}
+                        <button class="btn btn-outline-dark" id="loadMoreButton" data-next-page="{{ page_obj.next_page_number }}">Load More</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="viewCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title">Customer Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div class="d-flex justify-content-between align-items-end mb-4 pb-3 border-bottom">
+                    <div>
+                        <h2 class="mb-1 fw-bold" id="detailFullNameDisplay"></h2>
+                        <div class="text-muted small">Username: <span id="detailUsernameDisplay"></span></div>
+                    </div>
+                    <div class="text-end" id="detailStatusDisplay"></div>
+                </div>
+                </div>
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-dark edit-customer-btn" data-bs-dismiss="modal">Edit Details</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Customer Record</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editCustomerId">
+                <div class="row">
+                     <div class="col-md-6 mb-3">
+                        <label class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="firstNameInput">
+                    </div>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-dark" id="saveCustomerButton">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // [SECURITY] Endpoint obfuscation
+    const API = {
+        LIST: 'hidden',
+        DETAILS: 'hidden',
+        UPDATE: 'hidden',
+        BULK: 'hidden',
+        ADDRESS_UPDATE: 'hidden',
+        ADDRESS_DELETE: 'hidden'
+    };
+
+    // ... DOM Elements ...
+
+    function fetchData(page, replace = false) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', page);
+        
+        fetch(`${API.LIST}?${params}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTableBody = doc.getElementById('customerTableBody').innerHTML;
+            
+            if (replace) {
+                document.getElementById('customerTableBody').innerHTML = newTableBody;
+            } else {
+                document.getElementById('customerTableBody').insertAdjacentHTML('beforeend', newTableBody);
+            }
+            attachTableEventListeners();
+        });
+    }
+
+    // Modal Handling
+    function handleViewDetails() {
+        const customerId = this.getAttribute('data-customer-id');
+        // Mocking detail endpoint structure
+        fetch(`${API.DETAILS}`.replace('0', customerId), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                // Populate modal fields
+                document.getElementById('detailFullNameDisplay').textContent = data.data.first_name + ' ' + data.data.last_name;
+                // ... populate other fields ...
+            }
+        });
+    }
+
+    function handleEditCustomer() {
+        // Logic to populate edit form
+    }
+
+    // Save Customer
+    document.getElementById('saveCustomerButton').addEventListener('click', function() {
+        const payload = {
+            customer_id: document.getElementById('editCustomerId').value,
+            first_name: document.getElementById('firstNameInput').value,
+            // ... other fields
+        };
+        
+        fetch(API.UPDATE, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Close modal and refresh
+                fetchData(1, true);
+            }
+        });
+    });
+
+    // Bulk Actions
+    document.querySelectorAll('.dropdown-item[data-action]').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const action = this.getAttribute('data-action');
+            const ids = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+            
+            if(ids.length && confirm(`Confirm bulk action: ${action}?`)) {
+                fetch(API.BULK, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: JSON.stringify({ customer_ids: ids, action: action })
+                }).then(() => fetchData(1, true));
+            }
+        });
+    });
+
+    attachTableEventListeners();
+});
+</script>
+{% endblock content %}
