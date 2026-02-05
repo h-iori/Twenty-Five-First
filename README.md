@@ -7,7 +7,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-336791?logo=postgresql)](https://www.postgresql.org/)
 [![Custom Admin](https://img.shields.io/badge/Custom%20Admin-Full%20Featured-6a1b9a?logo=react)](https://example.com)
 [![Security](https://img.shields.io/badge/2FA%20+%20Rate%20Limit-Enterprise%20Grade-00bfa5)](https://example.com)
-[![Stars](https://img.shields.io/github/stars/h-iori/twentyfivefirst.svg?style=social)](https://github.com?h-iori/twentyfivefirst)
+[![Stars](https://img.shields.io/github/stars/h-iori/twentyfivefirst.svg?style=social)](https://github.com?h-iori/Twenty-Five-First)
 
 **Twenty-Five First** is a proprietary, high-performance enterprise e-commerce platform built exclusively for a live, running business. This is a private freelance project developed from the ground up using modern Django architecture. The complete source code is not publicly available and will remain closed-source due to security, intellectual property, and client confidentiality reasons. The product should not be used by anyone; it is my own property. I provide this kind of project services for clients.
 
