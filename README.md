@@ -35,17 +35,17 @@ Twenty-Five First is engineered for brands that demand both beauty and unbreakab
 
 | Home Page | Product Details Page | Checkout Page |
 | :---: | :---: | :---: |
-| ![Home](https://via.placeholder.com/400x250?text=Hero+Home+Page) | ![Product Details](https://via.placeholder.com/400x250?text=Product+Detail+View) | ![Checkout](https://via.placeholder.com/400x250?text=Full+Checkout+Process) |
+| ![Home](ReadmeSS/home.png) | ![Product Details](ReadmeSS/details.png) | ![Checkout](ReadmeSS/checkout.png) |
 
 ### Command Center: Custom Admin Mastery
 
 | Admin Dashboard | Order Details | Download Invoice PDF |
 | :---: | :---: | :---: |
-| ![Dashboard](https://via.placeholder.com/400x250?text=Admin+Dashboard+View) | ![Order Details](https://via.placeholder.com/400x250?text=Order+Details+Modal) | ![PDF Download](https://via.placeholder.com/400x250?text=Admin+Invoice+PDF) |
+| ![Dashboard](ReadmeSS/addash.png) | ![Order Details](ReadmeSS/adorder.png) | ![PDF Download](ReadmeSS/invoice.png) |
 
 | Recycle Bin | Real-Time Sidebar Notifications |
 | :---: | :---: |
-| ![Recycle Bin](https://via.placeholder.com/400x250?text=Admin+Recycle+Bin) | ![Notifications](https://via.placeholder.com/400x250?text=Admin+Sidebar+Notifications) |
+| ![Recycle Bin](ReadmeSS/adrecycle.png) | ![Notifications](ReadmeSS/adnavlink.png) |
 
 ### User Dashboard: Personalized Experience
 
@@ -53,7 +53,7 @@ The User Dashboard provides a seamless, intuitive interface for customers to man
 
 | Dashboard Overview | Order History | Browsing History | Wishlist Management | Profile Settings |
 | :---: | :---: | :---: | :---: | :---: |
-| ![Dashboard Overview](https://via.placeholder.com/400x250?text=User+Dashboard+Overview) | ![Order History](https://via.placeholder.com/400x250?text=User+Order+History) | ![Browsing History](https://via.placeholder.com/400x250?text=User+Browsing+History) | ![Wishlist](https://via.placeholder.com/400x250?text=User+Wishlist+Management) | ![Profile](https://via.placeholder.com/400x250?text=User+Profile+Settings) |
+| ![Dashboard Overview](ReadmeSS/usrdash.png) | ![Order History](ReadmeSS/usrorder.png) | ![Browsing History](ReadmeSS/usrhistory.png) | ![Wishlist](ReadmeSS/usrwish.png) | ![Profile](ReadmeSS/usrsettings.png) |
 
 These are not mockups—they are windows into a living, breathing enterprise system.
 
