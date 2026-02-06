@@ -29,7 +29,7 @@ Twenty-Five First is engineered for brands that demand both beauty and unbreakab
 
 ## 📸 Visual Showcase
 
-![Project Banner](https://via.placeholder.com/1200x400?text=Twenty-Five+First+-+Where+Code+Meets+Commerce)
+![Project Banner](ReadmeSS/logo.jpg)
 
 ### Customer-Facing Elegance
 
