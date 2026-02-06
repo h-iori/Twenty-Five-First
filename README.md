@@ -1,20 +1,10 @@
 # Twenty-Five First (TFF) | Enterprise Grade Full Stack E-Commerce Platform
 
-[![Django](https://img.shields.io/badge/Django-5.2-092e20?logo=django)](https://www.djangoproject.com/)
-[![Celery](https://img.shields.io/badge/Celery-5.5-37814a?logo=celery)](https://docs.celeryq.dev/)
-[![Redis](https://img.shields.io/badge/Redis-6.4-dc382d?logo=redis)](https://redis.io/)
-[![Meilisearch](https://img.shields.io/badge/Meilisearch-0.40-ff5c5c?logo=meilisearch)](https://www.meilisearch.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-336791?logo=postgresql)](https://www.postgresql.org/)
-[![Custom Admin](https://img.shields.io/badge/Custom%20Admin-Full%20Featured-6a1b9a?logo=react)](https://example.com)
-[![Security](https://img.shields.io/badge/2FA%20+%20Rate%20Limit-Enterprise%20Grade-00bfa5)](https://example.com)
-[![Stars](https://img.shields.io/github/stars/h-iori/twentyfivefirst.svg?style=social)](https://github.com/h-iori/Twenty-Five-First)
+[![Django](https://img.shields.io/badge/Django-5.2-092e20?logo=django)](https://www.djangoproject.com/) [![Celery](https://img.shields.io/badge/Celery-5.5-37814a?logo=celery)](https://docs.celeryq.dev/) [![Redis](https://img.shields.io/badge/Redis-6.4-dc382d?logo=redis)](https://redis.io/) [![Meilisearch](https://img.shields.io/badge/Meilisearch-0.40-ff5c5c?logo=meilisearch)](https://www.meilisearch.com/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-336791?logo=postgresql)](https://www.postgresql.org/) [![Custom Admin](https://img.shields.io/badge/Custom%20Admin-Full%20Featured-6a1b9a?logo=react)](https://example.com) [![Security](https://img.shields.io/badge/2FA%20+%20Rate%20Limit-Enterprise%20Grade-00bfa5)](https://example.com) [![Stars](https://img.shields.io/github/stars/h-iori/twentyfivefirst.svg?style=social)](https://github.com/h-iori/Twenty-Five-First)
 
-**Twenty-Five First** is a proprietary, high-performance enterprise e-commerce platform built exclusively for a live, running business. This is a private freelance project developed from the ground up using modern Django architecture. The complete source code is not publicly available and will remain closed-source due to security, intellectual property, and client confidentiality reasons. The product should not be used by anyone; it is my own property. I provide this kind of project services for clients.
+**Twenty-Five First** is a proprietary, high-performance enterprise e-commerce platform built exclusively for a live, running business. This is a private freelance project developed from the ground up using modern Django architecture. The complete source code is not publicly available and will remain closed-source due to security, intellectual property, and client confidentiality reasons. The product should not be used by anyone; it is my own property. I provide this kind of project services for clients. Only selected architectural highlights, custom admin capabilities, and technical design decisions are showcased in this README for portfolio and demonstration purposes. This project is/Will be deployed and actively serving real customers.
 
-Only selected architectural highlights, custom admin capabilities, and technical design decisions are showcased in this README for portfolio and demonstration purposes. This project is/Will be deployed and actively serving real customers.
-
-**Live URL**: https://twentyfivefirst.com
-
+**Live URL**: https://twentyfivefirst.com  
 **Alternate URL**: http://13.232.137.94
 
 ---
@@ -42,11 +32,13 @@ Twenty-Five First is engineered for brands that demand both beauty and unbreakab
 ![Project Banner](https://via.placeholder.com/1200x400?text=Twenty-Five+First+-+Where+Code+Meets+Commerce)
 
 ### Customer-Facing Elegance
+
 | Home Page | Product Details Page | Checkout Page |
 | :---: | :---: | :---: |
 | ![Home](https://via.placeholder.com/400x250?text=Hero+Home+Page) | ![Product Details](https://via.placeholder.com/400x250?text=Product+Detail+View) | ![Checkout](https://via.placeholder.com/400x250?text=Full+Checkout+Process) |
 
 ### Command Center: Custom Admin Mastery
+
 | Admin Dashboard | Order Details | Download Invoice PDF |
 | :---: | :---: | :---: |
 | ![Dashboard](https://via.placeholder.com/400x250?text=Admin+Dashboard+View) | ![Order Details](https://via.placeholder.com/400x250?text=Order+Details+Modal) | ![PDF Download](https://via.placeholder.com/400x250?text=Admin+Invoice+PDF) |
@@ -54,6 +46,14 @@ Twenty-Five First is engineered for brands that demand both beauty and unbreakab
 | Recycle Bin | Real-Time Sidebar Notifications |
 | :---: | :---: |
 | ![Recycle Bin](https://via.placeholder.com/400x250?text=Admin+Recycle+Bin) | ![Notifications](https://via.placeholder.com/400x250?text=Admin+Sidebar+Notifications) |
+
+### User Dashboard: Personalized Experience
+
+The User Dashboard provides a seamless, intuitive interface for customers to manage their shopping journey. Key features include order tracking with real-time status updates, browsing history for quick re-access to viewed products, wishlist management, profile editing (including address and phone updates), review submission for purchased items, and secure access to invoices and returns. Built with prefetch-optimized queries and Redis-cached snapshots for instant loading, it ensures a responsive, user-centric experience while maintaining enterprise-grade security through authenticated views and rate-limited APIs.
+
+| Dashboard Overview | Order History | Browsing History | Wishlist Management | Profile Settings |
+| :---: | :---: | :---: | :---: | :---: |
+| ![Dashboard Overview](https://via.placeholder.com/400x250?text=User+Dashboard+Overview) | ![Order History](https://via.placeholder.com/400x250?text=User+Order+History) | ![Browsing History](https://via.placeholder.com/400x250?text=User+Browsing+History) | ![Wishlist](https://via.placeholder.com/400x250?text=User+Wishlist+Management) | ![Profile](https://via.placeholder.com/400x250?text=User+Profile+Settings) |
 
 These are not mockups—they are windows into a living, breathing enterprise system.
 
@@ -175,12 +175,10 @@ Available for freelance projects. Contact for custom development inquiries.
 
 ## 📄 Legal Notice
 
-© 2026 Harsh Upadhyay. All Rights Reserved.  
-This software, its source code, architecture, design, and documentation are the exclusive intellectual property of the developer and the commissioning client. Any unauthorized use, copying, distribution, or reverse-engineering is strictly prohibited and will be pursued legally.
-
-Full codebase is private and hidden for security and confidentiality reasons. This README serves solely as a professional portfolio showcase of capabilities and architectural decisions.
+© 2026 Harsh Upadhyay. All Rights Reserved. This software, its source code, architecture, design, and documentation are the exclusive intellectual property of the developer and the commissioning client. Any unauthorized use, copying, distribution, or reverse-engineering is strictly prohibited and will be pursued legally. Full codebase is private and hidden for security and confidentiality reasons. This README serves solely as a professional portfolio showcase of capabilities and architectural decisions.
 
 ---
 
-**Developed with ❤️ and relentless ambition by Harsh Upadhyay**  
+**Developed with ❤️ and relentless ambition by Harsh Upadhyay**
+
 *Showcasing enterprise Django architecture, custom admin mastery, distributed systems design, and a passion for turning technical excellence into unstoppable business growth.*
