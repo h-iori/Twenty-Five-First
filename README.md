@@ -5,7 +5,7 @@
 **Twenty-Five First** is a proprietary, high-performance enterprise e-commerce platform built exclusively for a live, running business. This is a private freelance project developed from the ground up using modern Django architecture. The complete source code is not publicly available and will remain closed-source due to security, intellectual property, and client confidentiality reasons. The product should not be used by anyone; it is my own property. I provide this kind of project services for clients. Only selected architectural highlights, custom admin capabilities, and technical design decisions are showcased in this README for portfolio and demonstration purposes. This project is/Will be deployed and actively serving real customers.
 
 **Live URL**: https://twentyfivefirst.com  
-**Alternate URL**: http://13.232.137.94
+**Alternate URL**: http://13.126.239.184/
 
 ---
 
